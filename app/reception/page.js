@@ -7,34 +7,143 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Users, UserPlus, Search, ArrowRight, Clock, CheckCircle } from "lucide-react"
+import {
+  Users,
+  UserPlus,
+  Search,
+  ArrowRight,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Phone,
+  MapPin,
+  Calendar,
+  User,
+  RefreshCw,
+} from "lucide-react"
 
 export default function ReceptionPage() {
   const [showNewPatientModal, setShowNewPatientModal] = useState(false)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [showOrientationModal, setShowOrientationModal] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
+  const [searchResults, setSearchResults] = useState([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [notification, setNotification] = useState(null)
+  const [filterStatus, setFilterStatus] = useState("tous")
 
-  const patientsEnAttente = [
-    { id: 1, nom: "Dupont", prenom: "Marie", heure: "09:30", statut: "En attente", service: "Consultation" },
-    { id: 2, nom: "Martin", prenom: "Pierre", heure: "09:45", statut: "Orienté", service: "Laboratoire" },
-    { id: 3, nom: "Bernard", prenom: "Sophie", heure: "10:00", statut: "En attente", service: "Imagerie" },
-    { id: 4, nom: "Durand", prenom: "Jean", heure: "10:15", statut: "En cours", service: "Consultation" },
-  ]
+  const [patientsEnAttente, setPatientsEnAttente] = useState([
+    {
+      id: 1,
+      nom: "Dupont",
+      prenom: "Marie",
+      heure: "09:30",
+      statut: "En attente",
+      service: "Consultation",
+      priorite: "normale",
+      telephone: "0123456789",
+      age: 45,
+      motif: "Consultation générale",
+    },
+    {
+      id: 2,
+      nom: "Martin",
+      prenom: "Pierre",
+      heure: "09:45",
+      statut: "Orienté",
+      service: "Laboratoire",
+      priorite: "normale",
+      telephone: "0123456790",
+      age: 32,
+      motif: "Analyses sanguines",
+    },
+    {
+      id: 3,
+      nom: "Bernard",
+      prenom: "Sophie",
+      heure: "10:00",
+      statut: "En attente",
+      service: "Imagerie",
+      priorite: "urgente",
+      telephone: "0123456791",
+      age: 28,
+      motif: "Radiographie thorax",
+    },
+    {
+      id: 4,
+      nom: "Durand",
+      prenom: "Jean",
+      heure: "10:15",
+      statut: "En cours",
+      service: "Consultation",
+      priorite: "normale",
+      telephone: "0123456792",
+      age: 67,
+      motif: "Suivi cardiologique",
+    },
+  ])
+
+  const showNotification = (message, type = "success") => {
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
+  }
 
   const handleNewPatient = (formData) => {
-    console.log("Nouveau patient:", formData)
+    const newPatient = {
+      id: Date.now(),
+      nom: formData.nom,
+      prenom: formData.prenom,
+      heure: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+      statut: "En attente",
+      service: "Réception",
+      priorite: formData.urgence || "normale",
+      telephone: formData.telephone,
+      age: formData.dateNaissance ? new Date().getFullYear() - new Date(formData.dateNaissance).getFullYear() : null,
+      motif: formData.motif || "Non spécifié",
+    }
+
+    setPatientsEnAttente((prev) => [...prev, newPatient])
     setShowNewPatientModal(false)
+    showNotification(`Dossier créé pour ${newPatient.prenom} ${newPatient.nom}`)
   }
 
-  const handleSearchPatient = (searchTerm) => {
-    console.log("Recherche:", searchTerm)
-    setShowSearchModal(false)
+  const handleSearchPatient = async (searchTerm) => {
+    setIsSearching(true)
+    // Simulate API call
+    setTimeout(() => {
+      const results = patientsEnAttente.filter(
+        (patient) =>
+          patient.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          patient.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          patient.telephone.includes(searchTerm),
+      )
+      setSearchResults(results)
+      setIsSearching(false)
+    }, 1000)
   }
 
-  const handleOrientation = (patientId, service) => {
-    console.log("Orientation patient", patientId, "vers", service)
+  const handleOrientation = (patientId, service, priorite) => {
+    setPatientsEnAttente((prev) =>
+      prev.map((patient) =>
+        patient.id === patientId ? { ...patient, statut: "Orienté", service, priorite } : patient,
+      ),
+    )
     setShowOrientationModal(false)
+    setSelectedPatient(null)
+    showNotification(`Patient orienté vers ${service}`)
+  }
+
+  const filteredPatients = patientsEnAttente.filter((patient) => {
+    if (filterStatus === "tous") return true
+    return patient.statut.toLowerCase().includes(filterStatus.toLowerCase())
+  })
+
+  const stats = {
+    total: patientsEnAttente.length,
+    enAttente: patientsEnAttente.filter((p) => p.statut === "En attente").length,
+    orientes: patientsEnAttente.filter((p) => p.statut === "Orienté").length,
+    termines: patientsEnAttente.filter((p) => p.statut === "Terminé").length,
+    urgents: patientsEnAttente.filter((p) => p.priorite === "urgente").length,
   }
 
   return (
@@ -42,132 +151,231 @@ export default function ReceptionPage() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Réception</h1>
-            <p className="text-gray-600">Gestion de l'accueil et création des dossiers patients</p>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+              Réception
+            </h1>
+            <p className="text-gray-600 mt-1">Gestion de l'accueil et création des dossiers patients</p>
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Aujourd'hui</p>
             <p className="text-2xl font-bold text-cyan-600">{new Date().toLocaleDateString("fr-FR")}</p>
+            <p className="text-sm text-gray-500">
+              {new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+        {notification && (
+          <div
+            className={`p-4 rounded-lg border-l-4 ${
+              notification.type === "success"
+                ? "bg-green-50 border-green-400 text-green-700"
+                : "bg-red-50 border-red-400 text-red-700"
+            } animate-in slide-in-from-top duration-300`}
+          >
+            <div className="flex items-center gap-2">
+              {notification.type === "success" ? (
+                <CheckCircle className="h-5 w-5" />
+              ) : (
+                <AlertCircle className="h-5 w-5" />
+              )}
+              {notification.message}
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-cyan-500">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Patients Aujourd'hui</p>
-                  <p className="text-2xl font-bold text-gray-900">24</p>
+                  <p className="text-sm text-gray-600">Total Patients</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
                 </div>
                 <Users className="h-8 w-8 text-cyan-600" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">En Attente</p>
-                  <p className="text-2xl font-bold text-orange-600">4</p>
+                  <p className="text-2xl font-bold text-orange-600">{stats.enAttente}</p>
                 </div>
                 <Clock className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Orientés</p>
-                  <p className="text-2xl font-bold text-green-600">18</p>
+                  <p className="text-2xl font-bold text-green-600">{stats.orientes}</p>
                 </div>
                 <ArrowRight className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Terminés</p>
-                  <p className="text-2xl font-bold text-blue-600">2</p>
+                  <p className="text-2xl font-bold text-blue-600">{stats.termines}</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Urgents</p>
+                  <p className="text-2xl font-bold text-red-600">{stats.urgents}</p>
+                </div>
+                <AlertCircle className="h-8 w-8 text-red-600" />
               </div>
             </CardContent>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => setShowNewPatientModal(true)}
-          >
+          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-cyan-600" />
+              <CardTitle className="flex items-center gap-2 text-cyan-700">
+                <UserPlus className="h-6 w-6" />
                 Nouveau Patient
               </CardTitle>
-              <CardDescription>Créer un nouveau dossier patient</CardDescription>
+              <CardDescription>Créer un nouveau dossier patient avec informations complètes</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-cyan-600 hover:bg-cyan-700">Créer Dossier</Button>
+              <Button
+                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 shadow-lg"
+                onClick={() => setShowNewPatientModal(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Créer Dossier
+              </Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setShowSearchModal(true)}>
+          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-gray-50 to-slate-50 border-gray-200">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Search className="h-5 w-5 text-gray-600" />
+              <CardTitle className="flex items-center gap-2 text-gray-700">
+                <Search className="h-6 w-6" />
                 Recherche Patient
               </CardTitle>
-              <CardDescription>Rechercher un patient existant</CardDescription>
+              <CardDescription>Rechercher un patient existant dans la base de données</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full bg-transparent">
+              <Button
+                variant="outline"
+                className="w-full border-gray-300 hover:bg-gray-50 shadow-lg bg-transparent"
+                onClick={() => setShowSearchModal(true)}
+              >
+                <Search className="h-4 w-4 mr-2" />
                 Rechercher
               </Button>
             </CardContent>
           </Card>
 
-          <Card
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => setShowOrientationModal(true)}
-          >
+          <Card className="hover:shadow-xl transition-all duration-300 hover:scale-105 bg-gradient-to-br from-emerald-50 to-green-50 border-emerald-200">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ArrowRight className="h-5 w-5 text-emerald-600" />
-                Orientation
+              <CardTitle className="flex items-center gap-2 text-emerald-700">
+                <ArrowRight className="h-6 w-6" />
+                Orientation Rapide
               </CardTitle>
-              <CardDescription>Orienter le patient vers un service</CardDescription>
+              <CardDescription>Orienter rapidement un patient vers un service</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-emerald-600 hover:bg-emerald-700">Orienter</Button>
+              <Button
+                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg"
+                onClick={() => setShowOrientationModal(true)}
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Orienter
+              </Button>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
+        <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle>Patients en Attente</CardTitle>
-            <CardDescription>Liste des patients présents à la réception</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-cyan-600" />
+                  Patients en Attente
+                </CardTitle>
+                <CardDescription>Liste des patients présents à la réception</CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="tous">Tous les statuts</option>
+                  <option value="en attente">En attente</option>
+                  <option value="orienté">Orientés</option>
+                  <option value="en cours">En cours</option>
+                </select>
+                <Button variant="outline" size="sm">
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {patientsEnAttente.map((patient) => (
-                <div key={patient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              {filteredPatients.map((patient) => (
+                <div
+                  key={patient.id}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
-                      <span className="text-cyan-600 font-semibold">{patient.nom.charAt(0)}</span>
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
+                        patient.priorite === "urgente" ? "bg-red-500" : "bg-cyan-500"
+                      }`}
+                    >
+                      {patient.nom.charAt(0)}
+                      {patient.prenom.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-medium">
-                        {patient.nom} {patient.prenom}
-                      </p>
-                      <p className="text-sm text-gray-500">Arrivé à {patient.heure}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-gray-900">
+                          {patient.nom} {patient.prenom}
+                        </p>
+                        {patient.priorite === "urgente" && (
+                          <Badge variant="destructive" className="text-xs">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            URGENT
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {patient.heure}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {patient.age} ans
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          {patient.telephone}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">{patient.motif}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -177,19 +385,24 @@ export default function ReceptionPage() {
                           ? "secondary"
                           : patient.statut === "Orienté"
                             ? "default"
-                            : "outline"
+                            : patient.statut === "En cours"
+                              ? "outline"
+                              : "destructive"
                       }
+                      className="min-w-[80px] justify-center"
                     >
                       {patient.statut}
                     </Badge>
-                    <span className="text-sm text-gray-600">{patient.service}</span>
+                    <span className="text-sm text-gray-600 min-w-[100px]">{patient.service}</span>
                     <Button
                       size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700"
                       onClick={() => {
                         setSelectedPatient(patient)
                         setShowOrientationModal(true)
                       }}
                     >
+                      <ArrowRight className="h-4 w-4 mr-1" />
                       Orienter
                     </Button>
                   </div>
@@ -211,51 +424,87 @@ export default function ReceptionPage() {
               const formData = new FormData(e.target)
               handleNewPatient(Object.fromEntries(formData))
             }}
-            className="space-y-4"
+            className="space-y-6"
           >
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
-                <Input name="nom" required />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <User className="h-4 w-4 inline mr-1" />
+                  Nom *
+                </label>
+                <Input name="nom" required className="border-gray-300" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
-                <Input name="prenom" required />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <User className="h-4 w-4 inline mr-1" />
+                  Prénom *
+                </label>
+                <Input name="prenom" required className="border-gray-300" />
               </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
-                <Input name="dateNaissance" type="date" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Calendar className="h-4 w-4 inline mr-1" />
+                  Date de naissance
+                </label>
+                <Input name="dateNaissance" type="date" className="border-gray-300" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                <Input name="telephone" type="tel" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Phone className="h-4 w-4 inline mr-1" />
+                  Téléphone *
+                </label>
+                <Input name="telephone" type="tel" required className="border-gray-300" />
               </div>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
-              <Input name="adresse" />
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <MapPin className="h-4 w-4 inline mr-1" />
+                Adresse complète
+              </label>
+              <Input name="adresse" className="border-gray-300" />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
+              <textarea
+                name="motif"
+                rows="3"
+                className="w-full p-2 border border-gray-300 rounded-md"
+                placeholder="Décrivez brièvement le motif de la consultation..."
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type de patient</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type de patient</label>
                 <select name="typePatient" className="w-full p-2 border border-gray-300 rounded-md">
-                  <option value="nouveau">Nouveau</option>
-                  <option value="ancien">Ancien</option>
+                  <option value="nouveau">Nouveau patient</option>
+                  <option value="ancien">Patient existant</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Urgence</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <AlertCircle className="h-4 w-4 inline mr-1" />
+                  Niveau d'urgence
+                </label>
                 <select name="urgence" className="w-full p-2 border border-gray-300 rounded-md">
                   <option value="normale">Normale</option>
                   <option value="urgente">Urgente</option>
                 </select>
               </div>
             </div>
-            <div className="flex gap-3 pt-4">
-              <Button type="submit" className="flex-1">
-                Créer Dossier
+
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Créer le Dossier
               </Button>
               <Button type="button" variant="outline" onClick={() => setShowNewPatientModal(false)}>
                 Annuler
@@ -264,68 +513,143 @@ export default function ReceptionPage() {
           </form>
         </Modal>
 
-        <Modal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} title="Rechercher un Patient">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const formData = new FormData(e.target)
-              handleSearchPatient(formData.get("recherche"))
-            }}
-            className="space-y-4"
-          >
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Recherche</label>
-              <Input name="recherche" placeholder="Nom, prénom, téléphone ou numéro de dossier" autoFocus />
-            </div>
-            <div className="flex gap-3">
-              <Button type="submit" className="flex-1">
-                Rechercher
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowSearchModal(false)}>
-                Annuler
-              </Button>
-            </div>
-          </form>
-        </Modal>
+        <Modal
+          isOpen={showSearchModal}
+          onClose={() => setShowSearchModal(false)}
+          title="Rechercher un Patient"
+          size="lg"
+        >
+          <div className="space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const formData = new FormData(e.target)
+                handleSearchPatient(formData.get("recherche"))
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Search className="h-4 w-4 inline mr-1" />
+                  Critères de recherche
+                </label>
+                <Input
+                  name="recherche"
+                  placeholder="Nom, prénom, téléphone ou numéro de dossier"
+                  autoFocus
+                  className="border-gray-300"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button type="submit" className="flex-1" disabled={isSearching}>
+                  {isSearching ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Search className="h-4 w-4 mr-2" />
+                  )}
+                  {isSearching ? "Recherche..." : "Rechercher"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowSearchModal(false)}>
+                  Annuler
+                </Button>
+              </div>
+            </form>
 
-        <Modal isOpen={showOrientationModal} onClose={() => setShowOrientationModal(false)} title="Orientation Patient">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const formData = new FormData(e.target)
-              handleOrientation(selectedPatient?.id, formData.get("service"))
-            }}
-            className="space-y-4"
-          >
-            {selectedPatient && (
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium">
-                  {selectedPatient.nom} {selectedPatient.prenom}
-                </p>
-                <p className="text-sm text-gray-600">Arrivé à {selectedPatient.heure}</p>
+            {searchResults.length > 0 && (
+              <div className="mt-6 border-t pt-4">
+                <h3 className="font-medium text-gray-900 mb-3">Résultats de recherche</h3>
+                <div className="space-y-2">
+                  {searchResults.map((patient) => (
+                    <div key={patient.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                      <div>
+                        <p className="font-medium">
+                          {patient.nom} {patient.prenom}
+                        </p>
+                        <p className="text-sm text-gray-600">{patient.telephone}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedPatient(patient)
+                          setShowSearchModal(false)
+                          setShowOrientationModal(true)
+                        }}
+                      >
+                        Sélectionner
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
+          </div>
+        </Modal>
+
+        <Modal
+          isOpen={showOrientationModal}
+          onClose={() => setShowOrientationModal(false)}
+          title="Orientation Patient"
+          size="md"
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const formData = new FormData(e.target)
+              handleOrientation(selectedPatient?.id, formData.get("service"), formData.get("priorite"))
+            }}
+            className="space-y-6"
+          >
+            {selectedPatient && (
+              <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {selectedPatient.nom.charAt(0)}
+                    {selectedPatient.prenom.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {selectedPatient.nom} {selectedPatient.prenom}
+                    </p>
+                    <p className="text-sm text-gray-600">Arrivé à {selectedPatient.heure}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Service de destination</label>
-              <select name="service" className="w-full p-2 border border-gray-300 rounded-md" required>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <ArrowRight className="h-4 w-4 inline mr-1" />
+                Service de destination *
+              </label>
+              <select name="service" className="w-full p-3 border border-gray-300 rounded-md" required>
                 <option value="">Sélectionner un service</option>
-                <option value="consultation">Consultation Médicale</option>
-                <option value="infirmerie">Infirmerie</option>
-                <option value="laboratoire">Laboratoire</option>
-                <option value="imagerie">Imagerie</option>
-                <option value="caisse">Caisse</option>
+                <option value="Consultation Médicale">🩺 Consultation Médicale</option>
+                <option value="Infirmerie">💉 Infirmerie</option>
+                <option value="Laboratoire">🧪 Laboratoire</option>
+                <option value="Imagerie">📷 Imagerie Médicale</option>
+                <option value="Caisse">💳 Caisse</option>
+                <option value="Pharmacie">💊 Pharmacie</option>
               </select>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Priorité</label>
-              <select name="priorite" className="w-full p-2 border border-gray-300 rounded-md">
-                <option value="normale">Normale</option>
-                <option value="urgente">Urgente</option>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <AlertCircle className="h-4 w-4 inline mr-1" />
+                Niveau de priorité
+              </label>
+              <select name="priorite" className="w-full p-3 border border-gray-300 rounded-md">
+                <option value="normale">🟢 Normale</option>
+                <option value="urgente">🔴 Urgente</option>
               </select>
             </div>
-            <div className="flex gap-3">
-              <Button type="submit" className="flex-1">
-                Orienter
+
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Orienter le Patient
               </Button>
               <Button type="button" variant="outline" onClick={() => setShowOrientationModal(false)}>
                 Annuler
