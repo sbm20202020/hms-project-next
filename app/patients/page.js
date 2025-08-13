@@ -8,9 +8,11 @@ import { Badge } from "../../components/ui/badge"
 import { Plus, Eye, Edit, Phone, Mail } from "lucide-react"
 import FormModal from "../../components/ui/form-modal"
 import PatientForm from "../../components/patient-form"
+import { db } from "../../lib/database"
 
 const statusColors = {
   Actif: "bg-green-100 text-green-800",
+  "En traitement": "bg-blue-100 text-blue-800",
   Hospitalisé: "bg-blue-100 text-blue-800",
   Sorti: "bg-gray-100 text-gray-800",
   Urgent: "bg-red-100 text-red-800",
@@ -22,19 +24,38 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchPatients()
+    loadPatients()
   }, [])
 
-  const fetchPatients = async () => {
+  const loadPatients = async () => {
     try {
-      const response = await fetch("/api/patients")
-      const data = await response.json()
-      setPatients(data)
+      await db.initializeData()
+      const patientsData = db.getTable("patients")
+      // Transform data to match table format
+      const transformedPatients = patientsData.map((patient) => ({
+        ...patient,
+        nomComplet: `${patient.prenom} ${patient.nom}`,
+        age: new Date().getFullYear() - new Date(patient.dateNaissance).getFullYear(),
+        dernierVisite: patient.derniereVisite || patient.dateCreation,
+      }))
+      setPatients(transformedPatients)
     } catch (error) {
       console.error("Erreur lors du chargement des patients:", error)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleAddPatient = (newPatient) => {
+    const addedPatient = db.add("patients", newPatient)
+    const transformedPatient = {
+      ...addedPatient,
+      nomComplet: `${addedPatient.prenom} ${addedPatient.nom}`,
+      age: new Date().getFullYear() - new Date(addedPatient.dateNaissance).getFullYear(),
+      dernierVisite: addedPatient.derniereVisite || addedPatient.dateCreation,
+    }
+    setPatients((prev) => [...prev, transformedPatient])
+    setIsNewPatientModalOpen(false)
   }
 
   const columns = [
@@ -46,7 +67,7 @@ export default function PatientsPage() {
         <div>
           <div className="font-medium text-foreground">{value}</div>
           <div className="text-sm text-muted-foreground">
-            {row.age} ans • {row.sexe === "M" ? "Masculin" : "Féminin"}
+            {row.age} ans • {row.sexe === "Masculin" ? "Masculin" : "Féminin"}
           </div>
         </div>
       ),
@@ -68,13 +89,13 @@ export default function PatientsPage() {
       ),
     },
     {
-      key: "status",
+      key: "statut",
       header: "Statut",
       sortable: true,
       filterable: true,
       groupable: true,
       filterLabel: "Statut du patient",
-      render: (value) => <Badge className={statusColors[value]}>{value}</Badge>,
+      render: (value) => <Badge className={statusColors[value] || "bg-gray-100 text-gray-800"}>{value}</Badge>,
     },
     {
       key: "service",
@@ -85,7 +106,7 @@ export default function PatientsPage() {
       filterLabel: "Service médical",
     },
     {
-      key: "medecin",
+      key: "medecinTraitant",
       header: "Médecin",
       sortable: true,
       filterable: true,
@@ -178,7 +199,7 @@ export default function PatientsPage() {
           title="Nouveau Patient"
           description="Enregistrer un nouveau patient dans le système"
         >
-          <PatientForm onSuccess={() => setIsNewPatientModalOpen(false)} />
+          <PatientForm onSuccess={handleAddPatient} />
         </FormModal>
       </div>
     </DashboardLayout>
