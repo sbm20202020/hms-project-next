@@ -1,0 +1,36 @@
+[
+  {
+    "id": 1,
+    "patientId": 1,
+    "patientNom": "Marie Dubois",
+    "dateHeure": "2024-01-15T09:30:00",
+    "infirmier": "Inf. Koffi",
+    "signesVitaux": {
+      "tension": "120/80",
+      "temperature": "36.5",
+      "pouls": "72",
+      "saturation": "98"
+    },
+    "soinsEffectues": ["Prise de tension", "Injection intramusculaire", "Pansement"],
+    "observations": "Patient stable, bonne récupération",
+    "statut": "Terminé",
+    "factureId": 1
+  },
+  {
+    "id": 2,
+    "patientId": 2,
+    "patientNom": "Jean Dupont",
+    "dateHeure": "2024-01-20T14:15:00",
+    "infirmier": "Inf. Adjoua",
+    "signesVitaux": {
+      "tension": "110/70",
+      "temperature": "37.2",
+      "pouls": "85",
+      "saturation": "96"
+    },
+    "soinsEffectues": ["Perfusion", "Surveillance", "Administration médicaments"],
+    "observations": "Légère fièvre, surveillance continue",
+    "statut": "En cours",
+    "factureId": 2
+  }
+]

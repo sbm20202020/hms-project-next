@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "../../components/dashboard-layout"
 import AdvancedTable from "../../components/ui/advanced-table"
 import { Button } from "../../components/ui/button"
@@ -8,89 +8,6 @@ import { Badge } from "../../components/ui/badge"
 import { Plus, Eye, Edit, Phone, Mail } from "lucide-react"
 import FormModal from "../../components/ui/form-modal"
 import PatientForm from "../../components/patient-form"
-
-const mockPatients = [
-  {
-    id: 1,
-    nom: "Dubois",
-    prenom: "Marie",
-    nomComplet: "Marie Dubois",
-    age: 45,
-    sexe: "F",
-    telephone: "01 23 45 67 89",
-    email: "marie.dubois@email.com",
-    status: "Actif",
-    dernierVisite: "2024-01-15",
-    medecin: "Dr. Martin",
-    assurance: "CNSS",
-    ville: "Abidjan",
-    service: "Cardiologie",
-  },
-  {
-    id: 2,
-    nom: "Dupont",
-    prenom: "Jean",
-    nomComplet: "Jean Dupont",
-    age: 32,
-    sexe: "M",
-    telephone: "01 98 76 54 32",
-    email: "jean.dupont@email.com",
-    status: "Hospitalisé",
-    dernierVisite: "2024-01-20",
-    medecin: "Dr. Leroy",
-    assurance: "Privé",
-    ville: "Bouaké",
-    service: "Pédiatrie",
-  },
-  {
-    id: 3,
-    nom: "Bernard",
-    prenom: "Sophie",
-    nomComplet: "Sophie Bernard",
-    age: 28,
-    sexe: "F",
-    telephone: "01 11 22 33 44",
-    email: "sophie.bernard@email.com",
-    status: "Actif",
-    dernierVisite: "2024-01-18",
-    medecin: "Dr. Moreau",
-    assurance: "CNSS",
-    ville: "Yamoussoukro",
-    service: "Orthopédie",
-  },
-  {
-    id: 4,
-    nom: "Rousseau",
-    prenom: "Pierre",
-    nomComplet: "Pierre Rousseau",
-    age: 67,
-    sexe: "M",
-    telephone: "01 55 66 77 88",
-    email: "pierre.rousseau@email.com",
-    status: "Sorti",
-    dernierVisite: "2024-01-10",
-    medecin: "Dr. Petit",
-    assurance: "Privé",
-    ville: "San-Pédro",
-    service: "Neurologie",
-  },
-  {
-    id: 5,
-    nom: "Kouassi",
-    prenom: "Aya",
-    nomComplet: "Aya Kouassi",
-    age: 35,
-    sexe: "F",
-    telephone: "05 12 34 56 78",
-    email: "aya.kouassi@email.com",
-    status: "Actif",
-    dernierVisite: "2024-01-22",
-    medecin: "Dr. Martin",
-    assurance: "CNSS",
-    ville: "Abidjan",
-    service: "Gynécologie",
-  },
-]
 
 const statusColors = {
   Actif: "bg-green-100 text-green-800",
@@ -101,6 +18,24 @@ const statusColors = {
 
 export default function PatientsPage() {
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
+  const [patients, setPatients] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchPatients()
+  }, [])
+
+  const fetchPatients = async () => {
+    try {
+      const response = await fetch("/api/patients")
+      const data = await response.json()
+      setPatients(data)
+    } catch (error) {
+      console.error("Erreur lors du chargement des patients:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const columns = [
     {
@@ -138,6 +73,7 @@ export default function PatientsPage() {
       sortable: true,
       filterable: true,
       groupable: true,
+      filterLabel: "Statut du patient",
       render: (value) => <Badge className={statusColors[value]}>{value}</Badge>,
     },
     {
@@ -146,6 +82,7 @@ export default function PatientsPage() {
       sortable: true,
       filterable: true,
       groupable: true,
+      filterLabel: "Service médical",
     },
     {
       key: "medecin",
@@ -153,6 +90,7 @@ export default function PatientsPage() {
       sortable: true,
       filterable: true,
       groupable: true,
+      filterLabel: "Médecin traitant",
     },
     {
       key: "assurance",
@@ -160,6 +98,7 @@ export default function PatientsPage() {
       sortable: true,
       filterable: true,
       groupable: true,
+      filterLabel: "Type d'assurance",
       render: (value) => <Badge variant={value === "CNSS" ? "default" : "secondary"}>{value}</Badge>,
     },
     {
@@ -168,6 +107,7 @@ export default function PatientsPage() {
       sortable: true,
       filterable: true,
       groupable: true,
+      filterLabel: "Ville de résidence",
     },
     {
       key: "dernierVisite",
@@ -181,23 +121,33 @@ export default function PatientsPage() {
     {
       icon: <Eye className="h-4 w-4" />,
       onClick: (row) => {
-        // Navigate to patient details
         window.location.href = `/patients/${row.id}`
       },
     },
     {
       icon: <Edit className="h-4 w-4" />,
       onClick: (row) => {
-        // Open edit modal or navigate to edit page
         console.log("Edit patient:", row)
       },
     },
   ]
 
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Chargement des patients...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Gestion des Patients</h1>
@@ -211,7 +161,7 @@ export default function PatientsPage() {
 
         <AdvancedTable
           title="Liste des Patients"
-          data={mockPatients}
+          data={patients}
           columns={columns}
           actions={actions}
           searchable={true}

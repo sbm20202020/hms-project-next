@@ -1,0 +1,60 @@
+[
+  {
+    "id": 1,
+    "numeroFacture": "F2024-001",
+    "patientId": 1,
+    "patientNom": "Marie Dubois",
+    "dateFacture": "2024-01-15",
+    "montantTotal": 75000,
+    "montantPaye": 75000,
+    "statut": "Payée",
+    "typeAssurance": "CNSS",
+    "services": [
+      {
+        "nom": "Consultation Cardiologie",
+        "prix": 25000,
+        "quantite": 1
+      },
+      {
+        "nom": "ECG",
+        "prix": 15000,
+        "quantite": 1
+      },
+      {
+        "nom": "Médicaments",
+        "prix": 35000,
+        "quantite": 1
+      }
+    ],
+    "methodePaiement": "Espèces"
+  },
+  {
+    "id": 2,
+    "numeroFacture": "F2024-002",
+    "patientId": 2,
+    "patientNom": "Jean Dupont",
+    "dateFacture": "2024-01-20",
+    "montantTotal": 150000,
+    "montantPaye": 0,
+    "statut": "En attente",
+    "typeAssurance": "Privé",
+    "services": [
+      {
+        "nom": "Hospitalisation",
+        "prix": 100000,
+        "quantite": 2
+      },
+      {
+        "nom": "Consultation Pédiatrie",
+        "prix": 30000,
+        "quantite": 1
+      },
+      {
+        "nom": "Analyses",
+        "prix": 20000,
+        "quantite": 1
+      }
+    ],
+    "methodePaiement": null
+  }
+]

@@ -189,23 +189,25 @@ export default function AdvancedTable({
             {columns
               .filter((col) => col.filterable)
               .map((col) => (
-                <Select
-                  key={col.key}
-                  value={filters[col.key] || "all"}
-                  onValueChange={(value) => handleFilterChange(col.key, value)}
-                >
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder={`Filtrer ${col.header}`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
-                    {getUniqueValues(col.key).map((value) => (
-                      <SelectItem key={value} value={value}>
-                        {value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div key={col.key} className="flex flex-col space-y-1">
+                  <label className="text-sm font-medium text-muted-foreground">{col.filterLabel || col.header}</label>
+                  <Select
+                    value={filters[col.key] || "all"}
+                    onValueChange={(value) => handleFilterChange(col.key, value)}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder={`Filtrer ${col.header}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous</SelectItem>
+                      {getUniqueValues(col.key).map((value) => (
+                        <SelectItem key={value} value={value}>
+                          {value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               ))}
           </div>
         )}
