@@ -47,15 +47,30 @@ export default function PatientsPage() {
   }
 
   const handleAddPatient = (newPatient) => {
-    const addedPatient = db.add("patients", newPatient)
-    const transformedPatient = {
-      ...addedPatient,
-      nomComplet: `${addedPatient.prenom} ${addedPatient.nom}`,
-      age: new Date().getFullYear() - new Date(addedPatient.dateNaissance).getFullYear(),
-      dernierVisite: addedPatient.derniereVisite || addedPatient.dateCreation,
+    if (!newPatient) {
+      console.error("No patient data provided")
+      return
     }
-    setPatients((prev) => [...prev, transformedPatient])
-    setIsNewPatientModalOpen(false)
+
+    try {
+      const addedPatient = db.add("patients", newPatient)
+
+      if (!addedPatient) {
+        console.error("Failed to add patient")
+        return
+      }
+
+      const transformedPatient = {
+        ...addedPatient,
+        nomComplet: `${addedPatient.prenom} ${addedPatient.nom}`,
+        age: new Date().getFullYear() - new Date(addedPatient.dateNaissance).getFullYear(),
+        dernierVisite: addedPatient.derniereVisite || addedPatient.dateCreation,
+      }
+      setPatients((prev) => [...prev, transformedPatient])
+      setIsNewPatientModalOpen(false)
+    } catch (error) {
+      console.error("Error adding patient:", error)
+    }
   }
 
   const columns = [
