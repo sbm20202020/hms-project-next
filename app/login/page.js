@@ -21,17 +21,70 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulation d'une authentification
     setTimeout(() => {
       if (email && password) {
-        login({
-          id: 1,
-          name: "Dr. Admin",
-          email: email,
-          role: "Administrateur",
-          avatar: "AD",
-        })
-        router.push("/")
+        let userData = null
+
+        // Admin account
+        if (email === "admin@hospital.com" && password === "admin123") {
+          userData = {
+            id: 1,
+            name: "Dr. Admin",
+            email: email,
+            role: "admin",
+            roleDisplay: "Administrateur",
+            avatar: "AD",
+          }
+        }
+        // Doctor account
+        else if (email === "doctor@hospital.com" && password === "doctor123") {
+          userData = {
+            id: 2,
+            name: "Dr. Martin",
+            email: email,
+            role: "doctor",
+            roleDisplay: "Médecin",
+            avatar: "DM",
+          }
+        }
+        // Cashier account
+        else if (email === "caissier@hospital.com" && password === "caissier123") {
+          userData = {
+            id: 3,
+            name: "Marie Dubois",
+            email: email,
+            role: "cashier",
+            roleDisplay: "Caissier",
+            avatar: "MD",
+          }
+        }
+        // Nurse account
+        else if (email === "infirmier@hospital.com" && password === "infirmier123") {
+          userData = {
+            id: 4,
+            name: "Sophie Laurent",
+            email: email,
+            role: "nurse",
+            roleDisplay: "Infirmier",
+            avatar: "SL",
+          }
+        }
+        // Finance account
+        else if (email === "financier@hospital.com" && password === "financier123") {
+          userData = {
+            id: 5,
+            name: "Pierre Moreau",
+            email: email,
+            role: "finance",
+            roleDisplay: "Financier",
+            avatar: "PM",
+          }
+        }
+
+        if (userData) {
+          login(userData)
+          router.push("/")
+        }
       }
       setIsLoading(false)
     }, 1000)
@@ -89,9 +142,24 @@ export default function LoginPage() {
             </Button>
           </form>
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Comptes de démonstration :</p>
-            <p>Email: admin@hospital.com | Mot de passe: admin123</p>
-            <p>Email: doctor@hospital.com | Mot de passe: doctor123</p>
+            <p className="font-medium mb-2">Comptes de démonstration :</p>
+            <div className="space-y-1 text-xs">
+              <p>
+                <span className="font-medium">Admin:</span> admin@hospital.com | admin123
+              </p>
+              <p>
+                <span className="font-medium">Médecin:</span> doctor@hospital.com | doctor123
+              </p>
+              <p>
+                <span className="font-medium">Caissier:</span> caissier@hospital.com | caissier123
+              </p>
+              <p>
+                <span className="font-medium">Infirmier:</span> infirmier@hospital.com | infirmier123
+              </p>
+              <p>
+                <span className="font-medium">Financier:</span> financier@hospital.com | financier123
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
