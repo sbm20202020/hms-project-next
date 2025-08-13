@@ -184,63 +184,93 @@ export default function ReceptionPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-cyan-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Patients</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+          <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-muted-foreground font-display">Total Patients</CardTitle>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-lg">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-3xl font-bold font-display text-foreground">{stats.total}</div>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                  <span>+12%</span>
                 </div>
-                <Users className="h-8 w-8 text-cyan-600" />
+                <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">En Attente</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.enAttente}</p>
+          <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-muted-foreground font-display">En Attente</CardTitle>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-lg">
+                <Clock className="h-5 w-5 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-3xl font-bold font-display text-foreground">{stats.enAttente}</div>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                  <span>+5%</span>
                 </div>
-                <Clock className="h-8 w-8 text-orange-600" />
+                <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Orientés</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.orientes}</p>
+          <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-muted-foreground font-display">Orientés</CardTitle>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-lg">
+                <ArrowRight className="h-5 w-5 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-3xl font-bold font-display text-foreground">{stats.orientes}</div>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                  <span>+8%</span>
                 </div>
-                <ArrowRight className="h-8 w-8 text-green-600" />
+                <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Terminés</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.termines}</p>
+          <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-muted-foreground font-display">Terminés</CardTitle>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 shadow-lg">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-3xl font-bold font-display text-foreground">{stats.termines}</div>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                  <span>+15%</span>
                 </div>
-                <CheckCircle className="h-8 w-8 text-blue-600" />
+                <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Urgents</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.urgents}</p>
+          <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm font-semibold text-muted-foreground font-display">Urgents</CardTitle>
+              <div className="p-2 rounded-xl bg-gradient-to-br from-red-500 to-pink-600 shadow-lg">
+                <AlertCircle className="h-5 w-5 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-3xl font-bold font-display text-foreground">{stats.urgents}</div>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                  <span>-2%</span>
                 </div>
-                <AlertCircle className="h-8 w-8 text-red-600" />
+                <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
             </CardContent>
           </Card>
