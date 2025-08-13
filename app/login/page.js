@@ -21,17 +21,48 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulation d'une authentification
     setTimeout(() => {
       if (email && password) {
-        login({
-          id: 1,
-          name: "Dr. Admin",
-          email: email,
-          role: "Administrateur",
-          avatar: "AD",
-        })
-        router.push("/")
+        let userData = null
+
+        // Admin login
+        if (email === "admin@hospital.com" && password === "admin123") {
+          userData = {
+            id: 1,
+            name: "Dr. Admin",
+            email: email,
+            role: "Administrateur",
+            roleType: "admin",
+            avatar: "AD",
+          }
+        }
+        // Doctor login
+        else if (email === "doctor@hospital.com" && password === "doctor123") {
+          userData = {
+            id: 2,
+            name: "Dr. Martin Dubois",
+            email: email,
+            role: "Médecin",
+            roleType: "doctor",
+            avatar: "MD",
+          }
+        }
+        // Generic login for other users
+        else if (email && password) {
+          userData = {
+            id: 3,
+            name: "Utilisateur",
+            email: email,
+            role: "Utilisateur",
+            roleType: "user",
+            avatar: "U",
+          }
+        }
+
+        if (userData) {
+          login(userData)
+          router.push("/")
+        }
       }
       setIsLoading(false)
     }, 1000)

@@ -27,96 +27,153 @@ import {
   UserX,
   ArrowRightLeft,
   ClipboardList,
+  BookOpen,
+  Pill,
+  Heart,
 } from "lucide-react"
 import { Button } from "./ui/button"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { useState } from "react"
+import { useAuth } from "@/contexts/auth-context"
 
-const navigation = [
-  { name: "Tableau de Bord", href: "/", icon: Home },
-  {
-    name: "Parcours Patient",
-    icon: Activity,
-    children: [
-      { name: "Réception", href: "/reception", icon: UserPlus },
-      { name: "File d'attente", href: "/file-attente", icon: Clock },
-      { name: "Caisse", href: "/caisse", icon: Receipt },
-      { name: "Infirmerie", href: "/infirmerie", icon: Stethoscope },
-    ],
-  },
-  {
-    name: "Gestion Médicale",
-    icon: Users,
-    children: [
-      { name: "Patients", href: "/patients", icon: Users },
-      { name: "Médecins", href: "/doctors", icon: UserCheck },
-      { name: "Rendez-vous", href: "/appointments", icon: Calendar },
-    ],
-  },
-  {
-    name: "Hospitalisation",
-    icon: Building2,
-    children: [
-      { name: "Admissions", href: "/hospitalisation/admissions", icon: UserPlus },
-      { name: "Patients Hospitalisés", href: "/hospitalisation/patients", icon: Bed },
-      { name: "Sorties", href: "/hospitalisation/sorties", icon: UserX },
-      { name: "Transferts", href: "/hospitalisation/transferts", icon: ArrowRightLeft },
-      { name: "Suivi Médical", href: "/hospitalisation/suivi", icon: ClipboardList },
-    ],
-  },
-  {
-    name: "Services Médicaux",
-    icon: TestTube,
-    children: [
-      { name: "Laboratoire", href: "/laboratoire", icon: TestTube },
-      { name: "Imagerie", href: "/imagerie", icon: Scan },
-      { name: "Consultations", href: "/consultations", icon: Stethoscope },
-    ],
-  },
-  {
-    name: "Finance & Comptabilité",
-    icon: TrendingUp,
-    children: [
-      { name: "Tableau de Bord Financier", href: "/finance", icon: BarChart3 },
-      { name: "Analyse des Revenus", href: "/finance/revenus", icon: PieChart },
-      { name: "Gestion des Dépenses", href: "/finance/depenses", icon: CreditCard },
-      { name: "Rapports Financiers", href: "/finance/rapports", icon: FileText },
-    ],
-  },
-  {
-    name: "Administration",
-    icon: Settings,
-    children: [
-      { name: "Chambres", href: "/rooms", icon: Bed },
-      { name: "Facturation", href: "/billing", icon: CreditCard },
-      { name: "Rapports", href: "/rapports", icon: FileText },
+const getNavigationByRole = (roleType) => {
+  // Navigation pour les médecins
+  if (roleType === "doctor") {
+    return [
+      { name: "Tableau de Bord", href: "/", icon: Home },
       {
-        name: "Paramètres",
-        icon: Settings,
+        name: "Mes Patients",
+        icon: Users,
         children: [
-          { name: "Général", href: "/parametres", icon: Settings },
-          { name: "Utilisateurs", href: "/parametres/utilisateurs", icon: Users },
-          { name: "Rôles", href: "/parametres/roles", icon: UserCheck },
-          { name: "Permissions", href: "/parametres/permissions", icon: Settings },
+          { name: "Patients Assignés", href: "/patients", icon: Users },
+          { name: "Nouveaux Patients", href: "/patients/new", icon: UserPlus },
+          { name: "Dossiers Médicaux", href: "/patients/dossiers", icon: FileText },
         ],
       },
-    ],
-  },
-]
+      {
+        name: "Consultations",
+        icon: Stethoscope,
+        children: [
+          { name: "Mes Consultations", href: "/consultations", icon: Stethoscope },
+          { name: "Planning", href: "/appointments", icon: Calendar },
+          { name: "Urgences", href: "/urgences", icon: Heart },
+        ],
+      },
+      {
+        name: "Prescriptions",
+        icon: Pill,
+        children: [
+          { name: "Ordonnances", href: "/prescriptions", icon: Pill },
+          { name: "Historique", href: "/prescriptions/historique", icon: BookOpen },
+        ],
+      },
+      {
+        name: "Examens",
+        icon: TestTube,
+        children: [
+          { name: "Demandes d'Examens", href: "/examens", icon: TestTube },
+          { name: "Résultats", href: "/examens/resultats", icon: Scan },
+          { name: "Laboratoire", href: "/laboratoire", icon: TestTube },
+          { name: "Imagerie", href: "/imagerie", icon: Scan },
+        ],
+      },
+      {
+        name: "Hospitalisation",
+        icon: Building2,
+        children: [
+          { name: "Mes Patients Hospitalisés", href: "/hospitalisation/patients", icon: Bed },
+          { name: "Demandes d'Admission", href: "/hospitalisation/admissions", icon: UserPlus },
+          { name: "Suivi Médical", href: "/hospitalisation/suivi", icon: ClipboardList },
+        ],
+      },
+    ]
+  }
+
+  // Navigation complète pour les administrateurs
+  return [
+    { name: "Tableau de Bord", href: "/", icon: Home },
+    {
+      name: "Parcours Patient",
+      icon: Activity,
+      children: [
+        { name: "Réception", href: "/reception", icon: UserPlus },
+        { name: "File d'attente", href: "/file-attente", icon: Clock },
+        { name: "Caisse", href: "/caisse", icon: Receipt },
+        { name: "Infirmerie", href: "/infirmerie", icon: Stethoscope },
+      ],
+    },
+    {
+      name: "Gestion Médicale",
+      icon: Users,
+      children: [
+        { name: "Patients", href: "/patients", icon: Users },
+        { name: "Médecins", href: "/doctors", icon: UserCheck },
+        { name: "Rendez-vous", href: "/appointments", icon: Calendar },
+      ],
+    },
+    {
+      name: "Hospitalisation",
+      icon: Building2,
+      children: [
+        { name: "Admissions", href: "/hospitalisation/admissions", icon: UserPlus },
+        { name: "Patients Hospitalisés", href: "/hospitalisation/patients", icon: Bed },
+        { name: "Sorties", href: "/hospitalisation/sorties", icon: UserX },
+        { name: "Transferts", href: "/hospitalisation/transferts", icon: ArrowRightLeft },
+        { name: "Suivi Médical", href: "/hospitalisation/suivi", icon: ClipboardList },
+      ],
+    },
+    {
+      name: "Services Médicaux",
+      icon: TestTube,
+      children: [
+        { name: "Laboratoire", href: "/laboratoire", icon: TestTube },
+        { name: "Imagerie", href: "/imagerie", icon: Scan },
+        { name: "Consultations", href: "/consultations", icon: Stethoscope },
+      ],
+    },
+    {
+      name: "Finance & Comptabilité",
+      icon: TrendingUp,
+      children: [
+        { name: "Tableau de Bord Financier", href: "/finance", icon: BarChart3 },
+        { name: "Analyse des Revenus", href: "/finance/revenus", icon: PieChart },
+        { name: "Gestion des Dépenses", href: "/finance/depenses", icon: CreditCard },
+        { name: "Rapports Financiers", href: "/finance/rapports", icon: FileText },
+      ],
+    },
+    {
+      name: "Administration",
+      icon: Settings,
+      children: [
+        { name: "Chambres", href: "/rooms", icon: Bed },
+        { name: "Facturation", href: "/billing", icon: CreditCard },
+        { name: "Rapports", href: "/rapports", icon: FileText },
+        {
+          name: "Paramètres",
+          icon: Settings,
+          children: [
+            { name: "Général", href: "/parametres", icon: Settings },
+            { name: "Utilisateurs", href: "/parametres/utilisateurs", icon: Users },
+            { name: "Rôles", href: "/parametres/roles", icon: UserCheck },
+            { name: "Permissions", href: "/parametres/permissions", icon: Settings },
+          ],
+        },
+      ],
+    },
+  ]
+}
 
 export default function Sidebar({ open, setOpen }) {
   const router = useRouter()
   const pathname = usePathname()
   const [expandedSections, setExpandedSections] = useState({})
+  const { user, logout } = useAuth()
 
-  const user = {
-    name: "Dr. Admin",
-    role: "Administrateur",
-    avatar: "DA",
-  }
+  const navigation = getNavigationByRole(user?.roleType)
 
   const handleLogout = () => {
+    logout()
     router.push("/login")
   }
 
@@ -220,7 +277,9 @@ export default function Sidebar({ open, setOpen }) {
             </div>
             <div className="ml-3">
               <span className="text-xl font-bold text-white font-display">HMS</span>
-              <p className="text-xs text-white/80 font-medium">Centre Médical</p>
+              <p className="text-xs text-white/80 font-medium">
+                {user?.roleType === "doctor" ? "Espace Médecin" : "Centre Médical"}
+              </p>
             </div>
           </div>
 
