@@ -39,5 +39,4 @@ model Patient {
   service String?
   medecinTraitant String?
   derniereVisite DateTime?
-  assurance String?
 }
