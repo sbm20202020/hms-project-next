@@ -314,7 +314,7 @@ export default function ReceptionPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-cyan-700">
                 <UserPlus className="h-6 w-6" />
-                Nouveau Patient
+                Dossier Patient
               </CardTitle>
               <CardDescription>Créer un nouveau dossier patient avec informations complètes</CardDescription>
             </CardHeader>
@@ -490,155 +490,338 @@ export default function ReceptionPage() {
         <Modal
           isOpen={showNewPatientModal}
           onClose={() => setShowNewPatientModal(false)}
-          title="Nouveau Patient"
+          title="Dossier Patient"
           size="lg"
         >
-          <form
-            onSubmit={(e) => {
+          <div className="space-y-6">
+            {/* Choix du type de dossier */}
+            <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="dossierType"
+                  value="nouveau"
+                  defaultChecked
+                  onChange={(e) => {
+                    const existingPatientSection = document.getElementById('existingPatientSection')
+                    const newPatientSection = document.getElementById('newPatientSection')
+                    if (e.target.value === 'nouveau') {
+                      existingPatientSection?.classList.add('hidden')
+                      newPatientSection?.classList.remove('hidden')
+                    } else {
+                      existingPatientSection?.classList.remove('hidden')
+                      newPatientSection?.classList.add('hidden')
+                    }
+                  }}
+                  className="text-cyan-600"
+                />
+                <span className="font-medium">Nouveau Patient</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="dossierType"
+                  value="existant"
+                  onChange={(e) => {
+                    const existingPatientSection = document.getElementById('existingPatientSection')
+                    const newPatientSection = document.getElementById('newPatientSection')
+                    if (e.target.value === 'existant') {
+                      existingPatientSection?.classList.remove('hidden')
+                      newPatientSection?.classList.add('hidden')
+                    } else {
+                      existingPatientSection?.classList.add('hidden')
+                      newPatientSection?.classList.remove('hidden')
+                    }
+                  }}
+                  className="text-cyan-600"
+                />
+                <span className="font-medium">Patient Existant</span>
+              </label>
+            </div>
+
+            {/* Section Patient Existant */}
+            <div id="existingPatientSection" className="hidden space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Search className="h-4 w-4 inline mr-1" />
+                  Rechercher un Patient Existant *
+                </label>
+                <div className="relative">
+                  <Input
+                    placeholder="Nom, prénom, téléphone ou numéro de dossier..."
+                    value={patientSearchTerm}
+                    onChange={(e) => setPatientSearchTerm(e.target.value)}
+                    className="w-full pr-10"
+                  />
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                </div>
+                {patientSearchTerm && (
+                  <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md mt-1">
+                    {filteredPatientsForSearch.map((patient) => (
+                      <div
+                        key={patient.id}
+                        className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
+                          selectedPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
+                        }`}
+                        onClick={() => setSelectedPatient(patient)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                            {patient.nom.charAt(0)}
+                            {patient.prenom.charAt(0)}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-900">
+                              {patient.nom} {patient.prenom}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {patient.age} ans • {patient.telephone} • {patient.heure}
+                            </p>
+                          </div>
+                          {selectedPatient?.id === patient.id && (
+                            <CheckCircle className="h-5 w-5 text-blue-600" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {selectedPatient && (
+                <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-200">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
+                      {selectedPatient.nom.charAt(0)}
+                      {selectedPatient.prenom.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {selectedPatient.nom} {selectedPatient.prenom}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {selectedPatient.age} ans • {selectedPatient.telephone} • {selectedPatient.heure}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant={selectedPatient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
+                          {selectedPatient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
+                        </Badge>
+                        {selectedPatient.convention && (
+                          <Badge variant="outline" className="text-xs">
+                            {selectedPatient.convention}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <AlertCircle className="h-4 w-4 inline mr-1" />
+                    Niveau d'urgence
+                  </label>
+                  <select name="urgenceExistant" className="w-full p-2 border border-gray-300 rounded-md">
+                    <option value="normale">Normale</option>
+                    <option value="urgente">Urgente</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
+                  <textarea
+                    name="motifExistant"
+                    rows="3"
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Décrivez brièvement le motif de la consultation..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t">
+                <Button
+                  type="button"
+                  className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                  disabled={!selectedPatient}
+                  onClick={() => {
+                    if (selectedPatient) {
+                      const form = document.querySelector('#existingPatientSection form')
+                      const urgence = form?.querySelector('[name="urgenceExistant"]')?.value || 'normale'
+                      const motif = form?.querySelector('[name="motifExistant"]')?.value || 'Non spécifié'
+                      
+                      const newDossier = {
+                        ...selectedPatient,
+                        id: Date.now(),
+                        heure: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
+                        statut: "En attente",
+                        service: "Réception",
+                        priorite: urgence,
+                        motif: motif,
+                      }
+                      
+                      setPatientsEnAttente((prev) => [...prev, newDossier])
+                      setShowNewPatientModal(false)
+                      setSelectedPatient(null)
+                      setPatientSearchTerm("")
+                      showNotification(`Dossier créé pour ${newDossier.prenom} ${newDossier.nom}`)
+                    }
+                  }}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Créer le Dossier
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowNewPatientModal(false)}>
+                  Annuler
+                </Button>
+              </div>
+            </div>
+
+            {/* Section Nouveau Patient */}
+            <form id="newPatientSection" onSubmit={(e) => {
               e.preventDefault()
               const formData = new FormData(e.target)
               handleNewPatient(Object.fromEntries(formData))
-            }}
-            className="space-y-6"
-          >
-            <div className="grid grid-cols-2 gap-4">
+            }} className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <User className="h-4 w-4 inline mr-1" />
+                    Nom *
+                  </label>
+                  <Input name="nom" required className="border-gray-300" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <User className="h-4 w-4 inline mr-1" />
+                    Prénom *
+                  </label>
+                  <Input name="prenom" required className="border-gray-300" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Calendar className="h-4 w-4 inline mr-1" />
+                    Date de naissance
+                  </label>
+                  <Input name="dateNaissance" type="date" className="border-gray-300" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Phone className="h-4 w-4 inline mr-1" />
+                    Téléphone *
+                  </label>
+                  <Input name="telephone" type="tel" required className="border-gray-300" />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="h-4 w-4 inline mr-1" />
-                  Nom *
+                  <MapPin className="h-4 w-4 inline mr-1" />
+                  Adresse complète
                 </label>
-                <Input name="nom" required className="border-gray-300" />
+                <Input name="adresse" className="border-gray-300" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="h-4 w-4 inline mr-1" />
-                  Prénom *
-                </label>
-                <Input name="prenom" required className="border-gray-300" />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="h-4 w-4 inline mr-1" />
-                  Date de naissance
-                </label>
-                <Input name="dateNaissance" type="date" className="border-gray-300" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Phone className="h-4 w-4 inline mr-1" />
-                  Téléphone *
-                </label>
-                <Input name="telephone" type="tel" required className="border-gray-300" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <MapPin className="h-4 w-4 inline mr-1" />
-                Adresse complète
-              </label>
-              <Input name="adresse" className="border-gray-300" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
-              <textarea
-                name="motif"
-                rows="3"
-                className="w-full p-2 border border-gray-300 rounded-md"
-                placeholder="Décrivez brièvement le motif de la consultation..."
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Type de patient</label>
-                <select 
-                  name="typePatient" 
+                <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
+                <textarea
+                  name="motif"
+                  rows="3"
                   className="w-full p-2 border border-gray-300 rounded-md"
-                  onChange={(e) => {
-                    // Reset convention if switching to private
-                    if (e.target.value === "prive") {
-                      const form = e.target.form
-                      if (form && form.convention) {
-                        form.convention.value = ""
+                  placeholder="Décrivez brièvement le motif de la consultation..."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Type de patient</label>
+                  <select 
+                    name="typePatient" 
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    onChange={(e) => {
+                      // Reset convention if switching to private
+                      if (e.target.value === "prive") {
+                        const form = e.target.form
+                        if (form && form.convention) {
+                          form.convention.value = ""
+                        }
                       }
-                    }
-                    toggleConventionSection(e.target.value)
-                  }}
-                >
-                  <option value="prive">Patient privé</option>
-                  <option value="conventionne">Patient conventionné</option>
-                </select>
+                      toggleConventionSection(e.target.value)
+                    }}
+                  >
+                    <option value="prive">Patient privé</option>
+                    <option value="conventionne">Patient conventionné</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <AlertCircle className="h-4 w-4 inline mr-1" />
+                    Niveau d'urgence
+                  </label>
+                  <select name="urgence" className="w-full p-2 border border-gray-300 rounded-md">
+                    <option value="normale">Normale</option>
+                    <option value="urgente">Urgente</option>
+                  </select>
+                </div>
               </div>
-              <div>
+
+              <div id="conventionSection" className="hidden">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <AlertCircle className="h-4 w-4 inline mr-1" />
-                  Niveau d'urgence
+                  <Users className="h-4 w-4 inline mr-1" />
+                  Convention *
                 </label>
-                <select name="urgence" className="w-full p-2 border border-gray-300 rounded-md">
-                  <option value="normale">Normale</option>
-                  <option value="urgente">Urgente</option>
+                <select name="convention" className="w-full p-2 border border-gray-300 rounded-md">
+                  <option value="">Sélectionner une convention</option>
+                  <optgroup label="Entreprises">
+                    <option value="cnss">CNSS - Caisse Nationale de Sécurité Sociale</option>
+                    <option value="cnrps">CNRPS - Caisse Nationale de Retraite et de Prévoyance Sociale</option>
+                    <option value="cnas">CNAS - Caisse Nationale des Assurances Sociales</option>
+                    <option value="cnam">CNAM - Caisse Nationale d'Assurance Maladie</option>
+                  </optgroup>
+                  <optgroup label="Sociétés Privées">
+                    <option value="sotra">SOTRA - Société de Transport d'Abidjan</option>
+                    <option value="sodeci">SODECI - Société de Distribution d'Eau de Côte d'Ivoire</option>
+                    <option value="cienergies">CIE - Compagnie Ivoirienne d'Électricité</option>
+                    <option value="portabidjan">Port Autonome d'Abidjan</option>
+                    <option value="aeroport">Aéroport International Félix Houphouët-Boigny</option>
+                  </optgroup>
+                  <optgroup label="Associations & ONG">
+                    <option value="croixrouge">Croix-Rouge Ivoirienne</option>
+                    <option value="medecinsmonde">Médecins du Monde</option>
+                    <option value="msf">MSF - Médecins Sans Frontières</option>
+                    <option value="unicef">UNICEF</option>
+                    <option value="oms">OMS - Organisation Mondiale de la Santé</option>
+                  </optgroup>
+                  <optgroup label="Institutions Publiques">
+                    <option value="armee">Armée de Côte d'Ivoire</option>
+                    <option value="police">Police Nationale</option>
+                    <option value="gendarmerie">Gendarmerie Nationale</option>
+                    <option value="douane">Douane Ivoirienne</option>
+                    <option value="impots">Direction Générale des Impôts</option>
+                  </optgroup>
+                  <optgroup label="Autres">
+                    <option value="autre">Autre convention</option>
+                  </optgroup>
                 </select>
               </div>
-            </div>
 
-            <div id="conventionSection" className="hidden">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Users className="h-4 w-4 inline mr-1" />
-                Convention *
-              </label>
-              <select name="convention" className="w-full p-2 border border-gray-300 rounded-md">
-                <option value="">Sélectionner une convention</option>
-                <optgroup label="Entreprises">
-                  <option value="cnss">CNSS - Caisse Nationale de Sécurité Sociale</option>
-                  <option value="cnrps">CNRPS - Caisse Nationale de Retraite et de Prévoyance Sociale</option>
-                  <option value="cnas">CNAS - Caisse Nationale des Assurances Sociales</option>
-                  <option value="cnam">CNAM - Caisse Nationale d'Assurance Maladie</option>
-                </optgroup>
-                <optgroup label="Sociétés Privées">
-                  <option value="sotra">SOTRA - Société de Transport d'Abidjan</option>
-                  <option value="sodeci">SODECI - Société de Distribution d'Eau de Côte d'Ivoire</option>
-                  <option value="cienergies">CIE - Compagnie Ivoirienne d'Électricité</option>
-                  <option value="portabidjan">Port Autonome d'Abidjan</option>
-                  <option value="aeroport">Aéroport International Félix Houphouët-Boigny</option>
-                </optgroup>
-                <optgroup label="Associations & ONG">
-                  <option value="croixrouge">Croix-Rouge Ivoirienne</option>
-                  <option value="medecinsmonde">Médecins du Monde</option>
-                  <option value="msf">MSF - Médecins Sans Frontières</option>
-                  <option value="unicef">UNICEF</option>
-                  <option value="oms">OMS - Organisation Mondiale de la Santé</option>
-                </optgroup>
-                <optgroup label="Institutions Publiques">
-                  <option value="armee">Armée de Côte d'Ivoire</option>
-                  <option value="police">Police Nationale</option>
-                  <option value="gendarmerie">Gendarmerie Nationale</option>
-                  <option value="douane">Douane Ivoirienne</option>
-                  <option value="impots">Direction Générale des Impôts</option>
-                </optgroup>
-                <optgroup label="Autres">
-                  <option value="autre">Autre convention</option>
-                </optgroup>
-              </select>
-            </div>
-
-            <div className="flex gap-3 pt-4 border-t">
-              <Button
-                type="submit"
-                className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Créer le Dossier
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowNewPatientModal(false)}>
-                Annuler
-              </Button>
-            </div>
-          </form>
+              <div className="flex gap-3 pt-4 border-t">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Créer le Dossier
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowNewPatientModal(false)}>
+                  Annuler
+                </Button>
+              </div>
+            </form>
+          </div>
         </Modal>
 
         <Modal
