@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import DashboardLayout from "@/components/dashboard-layout"
 import Modal from "@/components/ui/modal"
 import { Button } from "@/components/ui/button"
@@ -33,64 +33,16 @@ export default function ReceptionPage() {
   const [filterStatus, setFilterStatus] = useState("tous")
   const [patientSearchTerm, setPatientSearchTerm] = useState("")
 
-  const [patientsEnAttente, setPatientsEnAttente] = useState([
-    {
-      id: 1,
-      nom: "Dupont",
-      prenom: "Marie",
-      heure: "09:30",
-      statut: "En attente",
-      service: "Consultation",
-      priorite: "normale",
-      telephone: "0123456789",
-      age: 45,
-      motif: "Consultation générale",
-      typePatient: "prive",
-      convention: null,
-    },
-    {
-      id: 2,
-      nom: "Martin",
-      prenom: "Pierre",
-      heure: "09:45",
-      statut: "Orienté",
-      service: "Laboratoire",
-      priorite: "normale",
-      telephone: "0123456790",
-      age: 32,
-      motif: "Analyses sanguines",
-      typePatient: "conventionne",
-      convention: "cnss",
-    },
-    {
-      id: 3,
-      nom: "Bernard",
-      prenom: "Sophie",
-      heure: "10:00",
-      statut: "En attente",
-      service: "Imagerie",
-      priorite: "urgente",
-      telephone: "0123456791",
-      age: 28,
-      motif: "Radiographie thorax",
-      typePatient: "prive",
-      convention: null,
-    },
-    {
-      id: 4,
-      nom: "Durand",
-      prenom: "Jean",
-      heure: "10:15",
-      statut: "En cours",
-      service: "Consultation",
-      priorite: "normale",
-      telephone: "0123456792",
-      age: 67,
-      motif: "Suivi cardiologique",
-      typePatient: "conventionne",
-      convention: "cnrps",
-    },
-  ])
+  const [patientsEnAttente, setPatientsEnAttente] = useState([])
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      const response = await fetch("/api/patients")
+      const data = await response.json()
+      setPatientsEnAttente(data)
+    }
+    fetchPatients()
+  }, [])
 
   const showNotification = (message, type = "success") => {
     setNotification({ message, type })
@@ -144,7 +96,7 @@ export default function ReceptionPage() {
     showNotification(`Patient orienté vers ${service}`)
   }
 
-  const filteredPatients = patientsEnAttente.filter((patient) => {
+  const filteredDossierPatients = patientsEnAttente.filter((patient) => {
     if (filterStatus === "tous") return true
     return patient.statut.toLowerCase().includes(filterStatus.toLowerCase())
   })
@@ -398,7 +350,7 @@ export default function ReceptionPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredPatients.map((patient) => (
+              {filteredDossierPatients.map((patient) => (
                 <div
                   key={patient.id}
                   className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"

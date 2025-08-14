@@ -39,4 +39,17 @@ model Patient {
   service String?
   medecinTraitant String?
   derniereVisite DateTime?
+
+  dossiers DossierPatient[] // Relation vers DossierPatient
+}
+
+model DossierPatient {
+  id        Int      @id @default(autoincrement())
+  patientId Int
+
+  motifDeVisite String?
+  niveauUrgence String
+  statut String
+
+  patient        Patient  @relation(fields: [patientId], references: [id])
 }
