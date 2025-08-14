@@ -141,7 +141,7 @@ export default function LoginPage() {
               {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
+          {/* <div className="mt-6 text-center text-sm text-muted-foreground">
             <p className="font-medium mb-2">Comptes de démonstration :</p>
             <div className="space-y-1 text-xs">
               <p>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                 <span className="font-medium">Financier:</span> financier@hospital.com | financier123
               </p>
             </div>
-          </div>
+          </div> */}
         </CardContent>
       </Card>
     </div>
