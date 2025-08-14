@@ -15,41 +15,115 @@ datasource db {
 }
 
 model Patient {
-  id        Int      @id @default(autoincrement())
-  nom       String
-  prenom    String
-  dateNaissance DateTime
-  age       Int
-  sexe      String?
-  telephone String?
-  email     String?
-  adresse   String?
-  ville     String?
-  codePostal String?
-  numeroSecu String?
-  typePatient String
-  convention String?
-  contactUrgence String?
+  id               Int       @id @default(autoincrement())
+  nom              String
+  prenom           String
+  dateNaissance    DateTime
+  age              Int
+  sexe             String?
+  telephone        String?
+  email            String?
+  adresse          String?
+  ville            String?
+  codePostal       String?
+  numeroSecu       String?
+  typePatient      String?
+  convention       String?
+  contactUrgence   String?
   telephoneUrgence String?
-  allergies String?
-  antecedents String?
-  traitements String?
-  dateCreation DateTime @default(now())
-  statut String?
-  service String?
-  medecinTraitant String?
-  derniereVisite DateTime?
+  allergies        String?
+  antecedents      String?
+  traitements      String?
+  dateCreation     DateTime  @default(now())
+  statut           String?
+  service          String?
+  medecinTraitant  String?
+  derniereVisite   DateTime?
 
   dossiers DossierPatient[] // Relation vers DossierPatient
 }
 
 model DossierPatient {
-  id        Int      @id @default(autoincrement())
-  patientId Int
+  id                Int  @id @default(autoincrement())
+  patientId         Int
+  serviceId         Int?
+  medecinTraitantId Int?
 
-  motifDeVisite String?
-  niveauUrgence String
-  statut String
+  motifDeVisite  String?
+  niveauUrgence  String? // rendu optionnel pour éviter problème
+  statut         String?   @default("En attente")
+  dateCreation   DateTime  @default(now())
+  dateTraitement DateTime?
 
-  patient        Patient  @relation(fields: [patientId], references: [id])
+  patient         Patient  @relation(fields: [patientId], references: [id])
+  service         Service? @relation(fields: [serviceId], references: [id])
+  medecinTraitant Employe? @relation(fields: [medecinTraitantId], references: [id])
+}
+
+model Service {
+  id           Int      @id @default(autoincrement())
+  nom          String
+  description  String?
+  statut       String?  @default("Actif")
+  dateCreation DateTime @default(now())
+  code         String?
+
+  dossiers DossierPatient[]
+}
+
+model Role {
+  id           Int      @id @default(autoincrement())
+  nom          String
+  description  String?
+  statut       String?  @default("Actif")
+  dateCreation DateTime @default(now())
+
+  users           User[]
+  rolePermissions RolePermission[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  roleId       Int
+  nom          String
+  email        String   @unique
+  password     String
+  statut       String?  @default("Actif")
+  dateCreation DateTime @default(now())
+
+  role    Role     @relation(fields: [roleId], references: [id])
+  employe Employe?
+}
+
+model Employe {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  nom          String
+  prenom       String
+  fonction     String // exemple: Médecin, Infirmier, Administratif
+  statut       String?  @default("Actif")
+  dateCreation DateTime @default(now())
+  code         String?
+
+  dossiers DossierPatient[]
+  user     User             @relation(fields: [userId], references: [id])
+}
+
+model Permission {
+  id          Int     @id @default(autoincrement())
+  nom         String  @unique
+  description String?
+
+  roles RolePermission[]
+}
+
+model RolePermission {
+  id           Int @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId]) // évite doublons
 }

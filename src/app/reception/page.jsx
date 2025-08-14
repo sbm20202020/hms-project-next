@@ -596,27 +596,39 @@ export default function ReceptionPage() {
                   type="button"
                   className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
                   disabled={!selectedPatient}
-                  onClick={() => {
+                  onClick={async () => {
                     if (selectedPatient) {
-                      const form = document.querySelector('#existingPatientSection form')
-                      const urgence = form?.querySelector('[name="urgenceExistant"]')?.value || 'normale'
-                      const motif = form?.querySelector('[name="motifExistant"]')?.value || 'Non spécifié'
-                      
-                      const newDossier = {
-                        ...selectedPatient,
-                        id: Date.now(),
-                        heure: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-                        statut: "En attente",
-                        service: "Réception",
-                        priorite: urgence,
-                        motif: motif,
+                      // Collect only data from the existing patient section form fields
+                      const container = document.getElementById("existingPatientSection")
+                      if (container) {
+                        const data = {}
+                        const urgenceEl = container.querySelector('[name="urgenceExistant"]')
+                        const motifEl = container.querySelector('[name="motifExistant"]')
+                        if (urgenceEl) data.urgence = urgenceEl.value
+                        if (motifEl) data.motif = motifEl.value
+                        console.log("Form data (existant):", data)
+
+                        const newDossier = {
+                          ...data,
+                          patientId: selectedPatient.id,
+                          statut: "En attente",
+                          dateCreation: new Date(),
+                        }
+
+                        await fetch("/api/dossiers", {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify(newDossier),
+                        })  
+                        console.log("newDossier", newDossier)
                       }
-                      
-                      setPatientsEnAttente((prev) => [...prev, newDossier])
-                      setShowNewPatientModal(false)
-                      setSelectedPatient(null)
-                      setPatientSearchTerm("")
-                      showNotification(`Dossier créé pour ${newDossier.prenom} ${newDossier.nom}`)
+                      // setPatientsEnAttente((prev) => [...prev, newDossier])
+                      // setShowNewPatientModal(false)
+                      // setSelectedPatient(null)
+                      // setPatientSearchTerm("")
+                      // showNotification(`Dossier créé pour ${newDossier.prenom} ${newDossier.nom}`)
                     }
                   }}
                 >
