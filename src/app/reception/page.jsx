@@ -468,7 +468,7 @@ export default function ReceptionPage() {
                     </Badge>
                     <span className="text-sm text-gray-600 min-w-[100px]">{patient.service}</span>
                     {patient.statut === "En attente" && (
-                      <Button
+                    <Button
                       size="sm"
                       className="bg-emerald-600 hover:bg-emerald-700"
                       onClick={() => {
@@ -683,144 +683,144 @@ export default function ReceptionPage() {
               const formData = new FormData(e.target)
               handleNewPatient(Object.fromEntries(formData))
             }} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <User className="h-4 w-4 inline mr-1" />
-                    Nom *
-                  </label>
-                  <Input name="nom" required className="border-gray-300" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <User className="h-4 w-4 inline mr-1" />
-                    Prénom *
-                  </label>
-                  <Input name="prenom" required className="border-gray-300" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Calendar className="h-4 w-4 inline mr-1" />
-                    Date de naissance
-                  </label>
-                  <Input name="dateNaissance" type="date" className="border-gray-300" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Phone className="h-4 w-4 inline mr-1" />
-                    Téléphone *
-                  </label>
-                  <Input name="telephone" type="tel" required className="border-gray-300" />
-                </div>
-              </div>
-
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <MapPin className="h-4 w-4 inline mr-1" />
-                  Adresse complète
+                  <User className="h-4 w-4 inline mr-1" />
+                  Nom *
                 </label>
-                <Input name="adresse" className="border-gray-300" />
+                <Input name="nom" required className="border-gray-300" />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
-                <textarea
-                  name="motif"
-                  rows="3"
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <User className="h-4 w-4 inline mr-1" />
+                  Prénom *
+                </label>
+                <Input name="prenom" required className="border-gray-300" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Calendar className="h-4 w-4 inline mr-1" />
+                  Date de naissance
+                </label>
+                <Input name="dateNaissance" type="date" className="border-gray-300" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Phone className="h-4 w-4 inline mr-1" />
+                  Téléphone *
+                </label>
+                <Input name="telephone" type="tel" required className="border-gray-300" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <MapPin className="h-4 w-4 inline mr-1" />
+                Adresse complète
+              </label>
+              <Input name="adresse" className="border-gray-300" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
+              <textarea
+                name="motif"
+                rows="3"
+                className="w-full p-2 border border-gray-300 rounded-md"
+                placeholder="Décrivez brièvement le motif de la consultation..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type de patient</label>
+                <select 
+                  name="typePatient" 
                   className="w-full p-2 border border-gray-300 rounded-md"
-                  placeholder="Décrivez brièvement le motif de la consultation..."
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type de patient</label>
-                  <select 
-                    name="typePatient" 
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    onChange={(e) => {
-                      // Reset convention if switching to private
-                      if (e.target.value === "prive") {
-                        const form = e.target.form
-                        if (form && form.convention) {
-                          form.convention.value = ""
-                        }
+                  onChange={(e) => {
+                    // Reset convention if switching to private
+                    if (e.target.value === "prive") {
+                      const form = e.target.form
+                      if (form && form.convention) {
+                        form.convention.value = ""
                       }
-                      toggleConventionSection(e.target.value)
-                    }}
-                  >
-                    <option value="prive">Patient privé</option>
-                    <option value="conventionne">Patient conventionné</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <AlertCircle className="h-4 w-4 inline mr-1" />
-                    Niveau d'urgence
-                  </label>
-                  <select name="urgence" className="w-full p-2 border border-gray-300 rounded-md">
-                    <option value="normale">Normale</option>
-                    <option value="urgente">Urgente</option>
-                  </select>
-                </div>
-              </div>
-
-              <div id="conventionSection" className="hidden">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Users className="h-4 w-4 inline mr-1" />
-                  Convention *
-                </label>
-                <select name="convention" className="w-full p-2 border border-gray-300 rounded-md">
-                  <option value="">Sélectionner une convention</option>
-                  <optgroup label="Entreprises">
-                    <option value="cnss">CNSS - Caisse Nationale de Sécurité Sociale</option>
-                    <option value="cnrps">CNRPS - Caisse Nationale de Retraite et de Prévoyance Sociale</option>
-                    <option value="cnas">CNAS - Caisse Nationale des Assurances Sociales</option>
-                    <option value="cnam">CNAM - Caisse Nationale d'Assurance Maladie</option>
-                  </optgroup>
-                  <optgroup label="Sociétés Privées">
-                    <option value="sotra">SOTRA - Société de Transport d'Abidjan</option>
-                    <option value="sodeci">SODECI - Société de Distribution d'Eau de Côte d'Ivoire</option>
-                    <option value="cienergies">CIE - Compagnie Ivoirienne d'Électricité</option>
-                    <option value="portabidjan">Port Autonome d'Abidjan</option>
-                    <option value="aeroport">Aéroport International Félix Houphouët-Boigny</option>
-                  </optgroup>
-                  <optgroup label="Associations & ONG">
-                    <option value="croixrouge">Croix-Rouge Ivoirienne</option>
-                    <option value="medecinsmonde">Médecins du Monde</option>
-                    <option value="msf">MSF - Médecins Sans Frontières</option>
-                    <option value="unicef">UNICEF</option>
-                    <option value="oms">OMS - Organisation Mondiale de la Santé</option>
-                  </optgroup>
-                  <optgroup label="Institutions Publiques">
-                    <option value="armee">Armée de Côte d'Ivoire</option>
-                    <option value="police">Police Nationale</option>
-                    <option value="gendarmerie">Gendarmerie Nationale</option>
-                    <option value="douane">Douane Ivoirienne</option>
-                    <option value="impots">Direction Générale des Impôts</option>
-                  </optgroup>
-                  <optgroup label="Autres">
-                    <option value="autre">Autre convention</option>
-                  </optgroup>
+                    }
+                    toggleConventionSection(e.target.value)
+                  }}
+                >
+                  <option value="prive">Patient privé</option>
+                  <option value="conventionne">Patient conventionné</option>
                 </select>
               </div>
-
-              <div className="flex gap-3 pt-4 border-t">
-                <Button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Créer le Dossier
-                </Button>
-                <Button type="button" variant="outline" onClick={() => setShowNewPatientModal(false)}>
-                  Annuler
-                </Button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <AlertCircle className="h-4 w-4 inline mr-1" />
+                  Niveau d'urgence
+                </label>
+                <select name="urgence" className="w-full p-2 border border-gray-300 rounded-md">
+                  <option value="normale">Normale</option>
+                  <option value="urgente">Urgente</option>
+                </select>
               </div>
-            </form>
+            </div>
+
+            <div id="conventionSection" className="hidden">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Users className="h-4 w-4 inline mr-1" />
+                Convention *
+              </label>
+              <select name="convention" className="w-full p-2 border border-gray-300 rounded-md">
+                <option value="">Sélectionner une convention</option>
+                <optgroup label="Entreprises">
+                  <option value="cnss">CNSS - Caisse Nationale de Sécurité Sociale</option>
+                  <option value="cnrps">CNRPS - Caisse Nationale de Retraite et de Prévoyance Sociale</option>
+                  <option value="cnas">CNAS - Caisse Nationale des Assurances Sociales</option>
+                  <option value="cnam">CNAM - Caisse Nationale d'Assurance Maladie</option>
+                </optgroup>
+                <optgroup label="Sociétés Privées">
+                  <option value="sotra">SOTRA - Société de Transport d'Abidjan</option>
+                  <option value="sodeci">SODECI - Société de Distribution d'Eau de Côte d'Ivoire</option>
+                  <option value="cienergies">CIE - Compagnie Ivoirienne d'Électricité</option>
+                  <option value="portabidjan">Port Autonome d'Abidjan</option>
+                  <option value="aeroport">Aéroport International Félix Houphouët-Boigny</option>
+                </optgroup>
+                <optgroup label="Associations & ONG">
+                  <option value="croixrouge">Croix-Rouge Ivoirienne</option>
+                  <option value="medecinsmonde">Médecins du Monde</option>
+                  <option value="msf">MSF - Médecins Sans Frontières</option>
+                  <option value="unicef">UNICEF</option>
+                  <option value="oms">OMS - Organisation Mondiale de la Santé</option>
+                </optgroup>
+                <optgroup label="Institutions Publiques">
+                  <option value="armee">Armée de Côte d'Ivoire</option>
+                  <option value="police">Police Nationale</option>
+                  <option value="gendarmerie">Gendarmerie Nationale</option>
+                  <option value="douane">Douane Ivoirienne</option>
+                  <option value="impots">Direction Générale des Impôts</option>
+                </optgroup>
+                <optgroup label="Autres">
+                  <option value="autre">Autre convention</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Créer le Dossier
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setShowNewPatientModal(false)}>
+                Annuler
+              </Button>
+            </div>
+          </form>
           </div>
         </Modal>
 

@@ -19,7 +19,62 @@ const statusColors = {
 
 export default function PatientsPage() {
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
-  const [patients, setPatients] = useState([])
+  const [patients, setPatients] = useState([
+    {
+      id: 1,
+      prenom: "Marie",
+      nom: "Dupont",
+      nomComplet: "Marie Dupont",
+      dateNaissance: "1980-05-15",
+      age: 44,
+      sexe: "F",
+      telephone: "0123456789",
+      email: "marie.dupont@email.com",
+      adresse: "123 Rue de la Paix",
+      ville: "Abidjan",
+      codePostal: "22501",
+      numeroSecu: "1234567890123",
+      typePatient: "conventionne",
+      convention: "cnss",
+      contactUrgence: "Jean Dupont",
+      telephoneUrgence: "0987654321",
+      allergies: "Pénicilline",
+      antecedents: "Hypertension",
+      traitements: "Amlodipine 5mg",
+      dateCreation: "2024-01-15T10:00:00Z",
+      statut: "Actif",
+      service: "Cardiologie",
+      medecinTraitant: "Dr. Martin",
+      derniereVisite: "2024-01-20T14:30:00Z",
+    },
+    {
+      id: 2,
+      prenom: "Pierre",
+      nom: "Martin",
+      nomComplet: "Pierre Martin",
+      dateNaissance: "1975-12-03",
+      age: 49,
+      sexe: "M",
+      telephone: "0123456790",
+      email: "pierre.martin@email.com",
+      adresse: "456 Avenue des Fleurs",
+      ville: "Yamoussoukro",
+      codePostal: "22502",
+      numeroSecu: "9876543210987",
+      typePatient: "prive",
+      convention: null,
+      contactUrgence: "Sophie Martin",
+      telephoneUrgence: "0123456791",
+      allergies: "Aucune",
+      antecedents: "Diabète type 2",
+      traitements: "Metformine 500mg",
+      dateCreation: "2024-01-10T09:00:00Z",
+      statut: "Actif",
+      service: "Endocrinologie",
+      medecinTraitant: "Dr. Bernard",
+      derniereVisite: "2024-01-18T11:00:00Z",
+    },
+  ])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,16 +85,22 @@ export default function PatientsPage() {
     try {
       const res = await fetch("/api/patients")
       const patientsData = res.ok ? await res.json() : []
-      // Transform data to match table format
-      const transformedPatients = patientsData.map((patient) => ({
-        ...patient,
-        nomComplet: `${patient.prenom} ${patient.nom}`,
-        age: new Date().getFullYear() - new Date(patient.dateNaissance).getFullYear(),
-        dernierVisite: patient.derniereVisite || patient.dateCreation,
-      }))
-      setPatients(transformedPatients)
+      
+      // Only load from API if we don't have existing patients
+      if (patientsData.length > 0) {
+        // Transform data to match table format
+        const transformedPatients = patientsData.map((patient) => ({
+          ...patient,
+          nomComplet: `${patient.prenom} ${patient.nom}`,
+          age: new Date().getFullYear() - new Date(patient.dateNaissance).getFullYear(),
+          dernierVisite: patient.derniereVisite || patient.dateCreation,
+        }))
+        setPatients(transformedPatients)
+      }
+      // Keep existing example data if API returns empty
     } catch (error) {
       console.error("Erreur lors du chargement des patients:", error)
+      // Keep existing example data on error
     } finally {
       setLoading(false)
     }
@@ -88,7 +149,10 @@ export default function PatientsPage() {
         <div>
           <div className="font-medium text-foreground">{value}</div>
           <div className="text-sm text-muted-foreground">
-            {row.age} ans • {row.sexe === "Masculin" ? "Masculin" : "Féminin"}
+            {row.age} ans • {row.sexe === "M" ? "Masculin" : row.sexe === "F" ? "Féminin" : "Autre"}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {row.ville} • {row.codePostal}
           </div>
         </div>
       ),
@@ -102,10 +166,38 @@ export default function PatientsPage() {
             <Phone className="h-3 w-3 text-muted-foreground" />
             <span className="text-sm">{value}</span>
           </div>
-          <div className="flex items-center space-x-2">
-            <Mail className="h-3 w-3 text-muted-foreground" />
-            <span className="text-sm">{row.email}</span>
-          </div>
+          {row.email && (
+            <div className="flex items-center space-x-2">
+              <Mail className="h-3 w-3 text-muted-foreground" />
+              <span className="text-sm">{row.email}</span>
+            </div>
+          )}
+          {row.contactUrgence && (
+            <div className="flex items-center space-x-2">
+              <Phone className="h-3 w-3 text-orange-500" />
+              <span className="text-xs text-orange-600">{row.contactUrgence}</span>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "typePatient",
+      header: "Type & Convention",
+      sortable: true,
+      filterable: true,
+      groupable: true,
+      filterLabel: "Type de patient",
+      render: (value, row) => (
+        <div className="space-y-1">
+          <Badge variant={value === "conventionne" ? "default" : "secondary"} className="text-xs">
+            {value === "conventionne" ? "Conventionné" : "Privé"}
+          </Badge>
+          {row.convention && (
+            <div className="text-xs text-muted-foreground">
+              {row.convention.toUpperCase()}
+            </div>
+          )}
         </div>
       ),
     },
@@ -120,42 +212,43 @@ export default function PatientsPage() {
     },
     {
       key: "service",
-      header: "Service",
+      header: "Service & Médecin",
       sortable: true,
       filterable: true,
       groupable: true,
       filterLabel: "Service médical",
+      render: (value, row) => (
+        <div className="space-y-1">
+          <div className="font-medium text-sm">{value}</div>
+          {row.medecinTraitant && (
+            <div className="text-xs text-muted-foreground">
+              {row.medecinTraitant}
+            </div>
+          )}
+        </div>
+      ),
     },
-    {
-      key: "medecinTraitant",
-      header: "Médecin",
-      sortable: true,
-      filterable: true,
-      groupable: true,
-      filterLabel: "Médecin traitant",
-    },
-    {
-      key: "assurance",
-      header: "Assurance",
-      sortable: true,
-      filterable: true,
-      groupable: true,
-      filterLabel: "Type d'assurance",
-      render: (value) => <Badge variant={value === "CNSS" ? "default" : "secondary"}>{value}</Badge>,
-    },
-    {
-      key: "ville",
-      header: "Ville",
-      sortable: true,
-      filterable: true,
-      groupable: true,
-      filterLabel: "Ville de résidence",
-    },
+    // {
+    //   key: "assurance",
+    //   header: "Assurance",
+    //   sortable: true,
+    //   filterable: true,
+    //   groupable: true,
+    //   filterLabel: "Type d'assurance",
+    //   render: (value) => <Badge variant={value === "Convention" ? "default" : "secondary"}>{value}</Badge>,
+    // },
     {
       key: "dernierVisite",
       header: "Dernière Visite",
       sortable: true,
-      render: (value) => new Date(value).toLocaleDateString("fr-FR"),
+      render: (value) => (
+        <div className="text-sm">
+          {new Date(value).toLocaleDateString("fr-FR")}
+          <div className="text-xs text-muted-foreground">
+            {new Date(value).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+          </div>
+        </div>
+      ),
     },
   ]
 

@@ -7,28 +7,62 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { Calendar, Phone, Mail, MapPin, AlertTriangle, FileText, Clock } from "lucide-react"
 
 // Mock data - in a real app, this would come from an API
-const mockPatientDetails = {
-  id: 1,
-  prenom: "Marie",
-  nom: "Dubois",
-  age: 45,
-  dateNaissance: "1979-03-15",
-  sexe: "F",
-  telephone: "01 23 45 67 89",
-  email: "marie.dubois@email.com",
-  adresse: "123 Rue de la Paix",
-  ville: "Paris",
-  codePostal: "75001",
-  numeroSecu: "2 79 03 75 123 456 78",
-  contactUrgence: "Jean Dubois",
-  telephoneUrgence: "01 98 76 54 32",
-  status: "Actif",
-  allergies: "Pénicilline, Arachides",
-  antecedents: "Hypertension, Diabète type 2",
-  traitements: "Metformine 500mg 2x/jour, Lisinopril 10mg 1x/jour",
-  medecinTraitant: "Dr. Martin",
-  dernierVisite: "2024-01-15",
-}
+const mockPatientDetails = [
+  {
+    id: 1,
+    prenom: "Marie",
+    nom: "Dupont",
+    nomComplet: "Marie Dupont",
+    dateNaissance: "1980-05-15",
+    age: 44,
+    sexe: "F",
+    telephone: "0123456789",
+    email: "marie.dupont@email.com",
+    adresse: "123 Rue de la Paix",
+    ville: "Abidjan",
+    codePostal: "22501",
+    numeroSecu: "1234567890123",
+    typePatient: "conventionne",
+    convention: "cnss",
+    contactUrgence: "Jean Dupont",
+    telephoneUrgence: "0987654321",
+    allergies: "Pénicilline",
+    antecedents: "Hypertension",
+    traitements: "Amlodipine 5mg",
+    dateCreation: "2024-01-15T10:00:00Z",
+    statut: "Actif",
+    service: "Cardiologie",
+    medecinTraitant: "Dr. Martin",
+    derniereVisite: "2024-01-20T14:30:00Z",
+  },
+  {
+    id: 2,
+    prenom: "Pierre",
+    nom: "Martin",
+    nomComplet: "Pierre Martin",
+    dateNaissance: "1975-12-03",
+    age: 49,
+    sexe: "M",
+    telephone: "0123456790",
+    email: "pierre.martin@email.com",
+    adresse: "456 Avenue des Fleurs",
+    ville: "Yamoussoukro",
+    codePostal: "22502",
+    numeroSecu: "9876543210987",
+    typePatient: "prive",
+    convention: null,
+    contactUrgence: "Sophie Martin",
+    telephoneUrgence: "0123456791",
+    allergies: "Aucune",
+    antecedents: "Diabète type 2",
+    traitements: "Metformine 500mg",
+    dateCreation: "2024-01-10T09:00:00Z",
+    statut: "Actif",
+    service: "Endocrinologie",
+    medecinTraitant: "Dr. Bernard",
+    derniereVisite: "2024-01-18T11:00:00Z",
+  },
+]
 
 const mockConsultations = [
   {
@@ -50,12 +84,14 @@ const mockConsultations = [
 ]
 
 export default function PatientDetails({ patientId }) {
+  console.log("patientId", patientId)
   const [patient, setPatient] = useState(null)
   const [consultations, setConsultations] = useState([])
 
   useEffect(() => {
     // In a real app, fetch patient data from API
-    setPatient(mockPatientDetails)
+    const patient = mockPatientDetails.find((patient) => patient.id === Number(patientId))
+    setPatient(patient)
     setConsultations(mockConsultations)
   }, [patientId])
 
@@ -98,7 +134,7 @@ export default function PatientDetails({ patientId }) {
         <TabsList>
           <TabsTrigger value="info">Informations</TabsTrigger>
           <TabsTrigger value="medical">Médical</TabsTrigger>
-          <TabsTrigger value="consultations">Consultations</TabsTrigger>
+          <TabsTrigger value="consultations">Dossiers</TabsTrigger>
         </TabsList>
 
         <TabsContent value="info" className="space-y-4">
