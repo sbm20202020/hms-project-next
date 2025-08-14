@@ -48,13 +48,12 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
       telephone: formData.telephone,
       adresse: formData.adresse,
       ville: formData.ville,
-      typePatient: formData.typePatient,
+      typePatient: formData.typePatient === "conventionne" ? "conventionne" : "prive",
       convention: formData.convention === "none" ? null : formData.convention,
       dateCreation: new Date().toISOString(),
       statut: "Actif",
       service: "Général",
       medecinTraitant: "",
-      assurance: formData.typePatient === "conventionne" ? "Convention" : "Privé",
     }
 
     // Ajouter les champs optionnels s'ils sont remplis
