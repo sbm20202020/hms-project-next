@@ -467,7 +467,8 @@ export default function ReceptionPage() {
                       {patient.statut}
                     </Badge>
                     <span className="text-sm text-gray-600 min-w-[100px]">{patient.service}</span>
-                    <Button
+                    {patient.statut === "En attente" && (
+                      <Button
                       size="sm"
                       className="bg-emerald-600 hover:bg-emerald-700"
                       onClick={() => {
@@ -478,6 +479,7 @@ export default function ReceptionPage() {
                       <ArrowRight className="h-4 w-4 mr-1" />
                       Orienter
                     </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -821,6 +823,14 @@ export default function ReceptionPage() {
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
                 disabled={!selectedPatient}
+                onClick={() => {
+                  console.log("selectedPatient", selectedPatient)
+                  setPatientsEnAttente((prev) =>
+                    prev.map((patient) =>
+                      patient.id === selectedPatient.id ? { ...patient, statut: "Orienté" } : patient,
+                    ),
+                  )
+                }}
               >
                 <ArrowRight className="h-4 w-4 mr-2" />
                 Orienter le Patient
