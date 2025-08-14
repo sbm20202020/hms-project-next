@@ -35,6 +35,7 @@ export default function LoginPage() {
             roleDisplay: "Administrateur",
             avatar: "AD",
           }
+          
         }
         // Doctor account
         else if (email === "doctor@hospital.com" && password === "doctor123") {
