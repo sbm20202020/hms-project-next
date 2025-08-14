@@ -609,10 +609,11 @@ export default function ReceptionPage() {
                         console.log("Form data (existant):", data)
 
                         const newDossier = {
-                          ...data,
                           patientId: selectedPatient.id,
                           statut: "En attente",
                           dateCreation: new Date(),
+                          niveauUrgence: data.urgence,
+                          motifDeVisite: data.motif,
                         }
 
                         await fetch("/api/dossiers", {
@@ -622,8 +623,8 @@ export default function ReceptionPage() {
                           },
                           body: JSON.stringify(newDossier),
                         })  
-                        console.log("newDossier", newDossier)
                       }
+                      // Todo: Ajouter le dossier à la liste des dossiers en attente
                       // setPatientsEnAttente((prev) => [...prev, newDossier])
                       // setShowNewPatientModal(false)
                       // setSelectedPatient(null)
