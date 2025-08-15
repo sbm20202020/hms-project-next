@@ -32,7 +32,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
     traitements: patient?.traitements || "",
   })
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     // Validation des champs obligatoires
     if (!formData.prenom || !formData.nom || !formData.dateNaissance || !formData.sexe || !formData.telephone || !formData.adresse) {
       alert("Veuillez remplir tous les champs obligatoires")
@@ -69,7 +69,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
     if (onSuccess) {
       onSuccess(patientData)
     }
-  }
+  }, [formData, onSuccess])
 
   useEffect(() => {
     if (typeof onSuccess === "function") {
