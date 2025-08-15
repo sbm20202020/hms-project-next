@@ -26,7 +26,7 @@ export default function ReceptionPage() {
   const [showNewPatientModal, setShowNewPatientModal] = useState(false)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [showOrientationModal, setShowOrientationModal] = useState(false)
-  const [selectedPatient, setSelectedPatient] = useState(null)
+  const [selectedDossierPatient, setselectedDossierPatient] = useState(null)
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [notification, setNotification] = useState(null)
@@ -34,6 +34,7 @@ export default function ReceptionPage() {
   const [patientSearchTerm, setPatientSearchTerm] = useState("")
 
   const [patientsEnAttente, setPatientsEnAttente] = useState([])
+  const [dossierPatient, setDossierPatient] = useState([])
 
   useEffect(() => {
     const fetchPatients = async () => {
@@ -41,7 +42,15 @@ export default function ReceptionPage() {
       const data = await response.json()
       setPatientsEnAttente(data)
     }
+
+    const fetchDossiers = async () => {
+      const response = await fetch("/api/dossiers")
+      const data = await response.json()
+      console.log("dossierPatient------------", data)
+      setDossierPatient(data)
+    }
     fetchPatients()
+    fetchDossiers()
   }, [])
 
   const showNotification = (message, type = "success") => {
@@ -92,13 +101,15 @@ export default function ReceptionPage() {
       ),
     )
     setShowOrientationModal(false)
-    setSelectedPatient(null)
+    setselectedDossierPatient(null)
     showNotification(`Patient orienté vers ${service}`)
   }
 
-  const filteredDossierPatients = patientsEnAttente.filter((patient) => {
+  const filteredDossierPatients = dossierPatient.filter((dossierPatient) => {
+    console.log("dossierPatient------------", dossierPatient)
+    console.log("filterStatus------------", filterStatus)
     if (filterStatus === "tous") return true
-    return patient.statut.toLowerCase().includes(filterStatus.toLowerCase())
+    return dossierPatient.statut.toLowerCase().includes(filterStatus.toLowerCase())
   })
 
   const filteredPatientsForSearch = patientsEnAttente.filter((patient) => {
@@ -338,9 +349,10 @@ export default function ReceptionPage() {
                   className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
                   <option value="tous">Tous les statuts</option>
-                  <option value="en attente">En attente</option>
-                  <option value="orienté">Orientés</option>
-                  <option value="en cours">En cours</option>
+                  <option value="attente">En attente</option>
+                  <option value="oriente">Orientés</option>
+                  <option value="encours">En cours</option>
+                  <option value="traite">Traités</option>
                 </select>
                 <Button variant="outline" size="sm">
                   <RefreshCw className="h-4 w-4" />
@@ -350,26 +362,26 @@ export default function ReceptionPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredDossierPatients.map((patient) => (
+              {filteredDossierPatients.map((dossierPatient) => (
                 <div
-                  key={patient.id}
+                  key={dossierPatient.id}
                   className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
                 >
                   <div className="flex items-center gap-4">
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
-                        patient.priorite === "urgente" ? "bg-red-500" : "bg-cyan-500"
+                        dossierPatient.niveauUrgence === "urgente" ? "bg-red-500" : "bg-cyan-500"
                       }`}
                     >
-                      {patient.nom.charAt(0)}
-                      {patient.prenom.charAt(0)}
+                      {dossierPatient.patient.nom.charAt(0)}
+                      {dossierPatient.patient.prenom.charAt(0)}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-gray-900">
-                          {patient.nom} {patient.prenom}
+                          {dossierPatient.patient.nom} {dossierPatient.patient.prenom}
                         </p>
-                        {patient.priorite === "urgente" && (
+                        {dossierPatient.patient.priorite === "urgente" && (
                           <Badge variant="destructive" className="text-xs">
                             <AlertCircle className="h-3 w-3 mr-1" />
                             URGENT
@@ -379,25 +391,31 @@ export default function ReceptionPage() {
                       <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {patient.heure}
+                          {new Date(dossierPatient.dateCreation).toLocaleString("fr-FR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          })}
                         </span>
                         <span className="flex items-center gap-1">
                           <User className="h-3 w-3" />
-                          {patient.age} ans
+                          {dossierPatient.patient.age} ans
                         </span>
                         <span className="flex items-center gap-1">
                           <Phone className="h-3 w-3" />
-                          {patient.telephone}
+                          {dossierPatient.patient.telephone}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{patient.motif}</p>
+                      <p className="text-xs text-gray-500 mt-1">{dossierPatient.patient.motif}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={patient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
-                          {patient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
+                        <Badge variant={dossierPatient.patient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
+                          {dossierPatient.patient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
                         </Badge>
-                        {patient.convention && (
+                        {dossierPatient.patient.convention && (
                           <Badge variant="outline" className="text-xs">
-                            {patient.convention}
+                            {dossierPatient.patient.convention}
                           </Badge>
                         )}
                       </div>
@@ -406,29 +424,29 @@ export default function ReceptionPage() {
                   <div className="flex items-center gap-3">
                     <Badge
                       variant={
-                        patient.statut === "En attente"
+                        dossierPatient.statut === "attente"
                           ? "secondary"
-                          : patient.statut === "Orienté"
+                          : dossierPatient.statut === "oriente"
                             ? "default"
-                            : patient.statut === "En cours"
+                            : dossierPatient.statut === "encours"
                               ? "outline"
                               : "destructive"
                       }
                       className="min-w-[80px] justify-center"
                     >
-                      {patient.statut}
+                      {dossierPatient.statut === "attente" ? "En attente" : dossierPatient.statut === "oriente" ? "Orienté" : dossierPatient.statut === "encours" ? "En cours" : "Traité"}
                     </Badge>
-                    <span className="text-sm text-gray-600 min-w-[100px]">{patient.service}</span>
-                    {patient.statut === "En attente" && (
+                    <span className="text-sm text-gray-600 min-w-[100px]">{dossierPatient.service?.nom}</span>
+                    {dossierPatient.statut === "attente" && (
                     <Button
                       size="sm"
                       className="bg-emerald-600 hover:bg-emerald-700"
                       onClick={() => {
-                        setSelectedPatient(patient)
+                        setselectedDossierPatient(dossierPatient.patient)
                         setShowOrientationModal(true)
                       }}
                     >
-                      <ArrowRight className="h-4 w-4 mr-1" />
+                    <ArrowRight className="h-4 w-4 mr-1" />
                       Orienter
                     </Button>
                     )}
@@ -513,9 +531,9 @@ export default function ReceptionPage() {
                       <div
                         key={patient.id}
                         className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
-                          selectedPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
+                          selectedDossierPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
                         }`}
-                        onClick={() => setSelectedPatient(patient)}
+                        onClick={() => setselectedDossierPatient(patient)}
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
@@ -530,7 +548,7 @@ export default function ReceptionPage() {
                               {patient.age} ans • {patient.telephone} • {patient.heure}
                             </p>
                           </div>
-                          {selectedPatient?.id === patient.id && (
+                          {selectedDossierPatient?.id === patient.id && (
                             <CheckCircle className="h-5 w-5 text-blue-600" />
                           )}
                         </div>
@@ -540,27 +558,27 @@ export default function ReceptionPage() {
                 )}
               </div>
 
-              {selectedPatient && (
+              {selectedDossierPatient && (
                 <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      {selectedPatient.nom.charAt(0)}
-                      {selectedPatient.prenom.charAt(0)}
+                      {selectedDossierPatient.nom.charAt(0)}
+                      {selectedDossierPatient.prenom.charAt(0)}
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        {selectedPatient.nom} {selectedPatient.prenom}
+                        {selectedDossierPatient.nom} {selectedDossierPatient.prenom}
                       </p>
                       <p className="text-sm text-gray-600">
-                        {selectedPatient.age} ans • {selectedPatient.telephone} • {selectedPatient.heure}
+                        {selectedDossierPatient.age} ans • {selectedDossierPatient.telephone} • {selectedDossierPatient.heure}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={selectedPatient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
-                          {selectedPatient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
+                        <Badge variant={selectedDossierPatient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
+                          {selectedDossierPatient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
                         </Badge>
-                        {selectedPatient.convention && (
+                        {selectedDossierPatient.convention && (
                           <Badge variant="outline" className="text-xs">
-                            {selectedPatient.convention}
+                            {selectedDossierPatient.convention}
                           </Badge>
                         )}
                       </div>
@@ -595,9 +613,9 @@ export default function ReceptionPage() {
                 <Button
                   type="button"
                   className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-                  disabled={!selectedPatient}
+                  disabled={!selectedDossierPatient}
                   onClick={async () => {
-                    if (selectedPatient) {
+                    if (selectedDossierPatient) {
                       // Collect only data from the existing patient section form fields
                       const container = document.getElementById("existingPatientSection")
                       if (container) {
@@ -609,28 +627,29 @@ export default function ReceptionPage() {
                         console.log("Form data (existant):", data)
 
                         const newDossier = {
-                          patientId: selectedPatient.id,
+                          patientId: selectedDossierPatient.id,
                           dateCreation: new Date(),
                           niveauUrgence: data.urgence,
                           motifDeVisite: data.motif,
+                          patient: selectedDossierPatient,
+                          service: {}
                         }
-
+                        // await fetch("/api/dossiers", {
+                        //   method: "POST",
+                        //   headers: {
+                        //     "Content-Type": "application/json",
+                        //   },
+                        //   body: JSON.stringify(newDossier),
+                        // })  
+                        // Todo: Ajouter le dossier à la liste des dossiers en attente
                         console.log("newDossier------------", newDossier)
-
-                        await fetch("/api/dossiers", {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify(newDossier),
-                        })  
+                        // console.log("selectedDossierPatient------------", selectedDossierPatient)
+                        // setDossierPatient((prev) => [...prev, newDossier])
+                        // setShowNewPatientModal(false)
+                        // setselectedDossierPatient(null)
+                        // setPatientSearchTerm("")
+                        // showNotification(`Dossier créé pour ${newDossier?.patient?.prenom} ${newDossier?.patient?.nom}`)
                       }
-                      // Todo: Ajouter le dossier à la liste des dossiers en attente
-                      // setPatientsEnAttente((prev) => [...prev, newDossier])
-                      // setShowNewPatientModal(false)
-                      // setSelectedPatient(null)
-                      // setPatientSearchTerm("")
-                      // showNotification(`Dossier créé pour ${newDossier.prenom} ${newDossier.nom}`)
                     }
                   }}
                 >
@@ -847,7 +866,7 @@ export default function ReceptionPage() {
                       <Button
                         size="sm"
                         onClick={() => {
-                          setSelectedPatient(patient)
+                          setselectedDossierPatient(patient)
                           setShowSearchModal(false)
                           setShowOrientationModal(true)
                         }}
@@ -872,7 +891,7 @@ export default function ReceptionPage() {
             onSubmit={(e) => {
               e.preventDefault()
               const formData = new FormData(e.target)
-              handleOrientation(selectedPatient?.id, formData.get("service"), formData.get("priorite"))
+              handleOrientation(selectedDossierPatient?.id, formData.get("service"), formData.get("priorite"))
             }}
             className="space-y-6"
           >
@@ -896,9 +915,9 @@ export default function ReceptionPage() {
                     <div
                       key={patient.id}
                       className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
-                        selectedPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
+                        selectedDossierPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
                       }`}
-                      onClick={() => setSelectedPatient(patient)}
+                      onClick={() => setselectedDossierPatient(patient)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
@@ -913,7 +932,7 @@ export default function ReceptionPage() {
                             {patient.age} ans • {patient.telephone} • {patient.heure}
                           </p>
                         </div>
-                        {selectedPatient?.id === patient.id && (
+                        {selectedDossierPatient?.id === patient.id && (
                           <CheckCircle className="h-5 w-5 text-blue-600" />
                         )}
                       </div>
@@ -923,18 +942,18 @@ export default function ReceptionPage() {
               )}
             </div>
 
-            {selectedPatient && (
+            {selectedDossierPatient && (
               <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-200">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
-                    {selectedPatient.nom.charAt(0)}
-                    {selectedPatient.prenom.charAt(0)}
+                    {selectedDossierPatient.nom.charAt(0)}
+                    {selectedDossierPatient.prenom.charAt(0)}
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
-                      {selectedPatient.nom} {selectedPatient.prenom}
+                      {selectedDossierPatient.nom} {selectedDossierPatient.prenom}
                     </p>
-                    <p className="text-sm text-gray-600">Arrivé à {selectedPatient.heure}</p>
+                    <p className="text-sm text-gray-600">Arrivé à {selectedDossierPatient.heure}</p>
                   </div>
                 </div>
               </div>
@@ -971,12 +990,12 @@ export default function ReceptionPage() {
               <Button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
-                disabled={!selectedPatient}
+                disabled={!selectedDossierPatient}
                 onClick={() => {
-                  console.log("selectedPatient", selectedPatient)
+                  console.log("selectedDossierPatient", selectedDossierPatient)
                   setPatientsEnAttente((prev) =>
                     prev.map((patient) =>
-                      patient.id === selectedPatient.id ? { ...patient, statut: "Orienté" } : patient,
+                      patient.id === selectedDossierPatient.id ? { ...patient, statut: "Orienté" } : patient,
                     ),
                   )
                 }}
