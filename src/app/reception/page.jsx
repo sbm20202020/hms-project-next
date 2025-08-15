@@ -118,7 +118,7 @@ export default function ReceptionPage() {
       patient.telephone.includes(patientSearchTerm) ||
       patient.id.toString().includes(patientSearchTerm)
     )
-    
+
   })
 
   const stats = {
@@ -624,24 +624,29 @@ export default function ReceptionPage() {
                         if (motifEl) data.motif = motifEl.value
                         console.log("Form data (existant):", data)
 
-                        const newDossier = {
+                        let newDossier = {
                           patientId: selectedPatient.id,
                           dateCreation: new Date(),
                           niveauUrgence: data.urgence,
                           motifDeVisite: data.motif,
-                          patient: selectedPatient,
-                          service: {}
+                          statut: "attente",
                         }
-                        // await fetch("/api/dossiers", {
-                        //   method: "POST",
-                        //   headers: {
-                        //     "Content-Type": "application/json",
-                        //   },
-                        //   body: JSON.stringify(newDossier),
-                        // })  
+                        const response = await fetch("/api/dossiers", {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify(newDossier),
+                        }) 
+                        const res = await response.json()
+                        console.log("data------------", res)
+                        newDossier = {
+                          ...newDossier,
+                          patient: selectedPatient,
+                          service: {},
+                        }
                         // Todo: Ajouter le dossier à la liste des dossiers en attente
                         console.log("newDossier------------", newDossier)
-                        // console.log("selectedPatient------------", selectedPatient)
                         setDossierPatient((prev) => [...prev, newDossier])
                         setShowNewPatientModal(false)
                         setSelectedPatient(null)

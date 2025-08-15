@@ -26,7 +26,6 @@ export async function GET() {
 export async function POST(request) {
   try {
     const newDossier = await request.json()
-    console.log("newDossier------------", newDossier)
     await prisma.dossierPatient.create({
       data: newDossier,
     })
