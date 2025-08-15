@@ -76,7 +76,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
       // Store the submit handler for the parent to access
       window.patientFormSubmit = handleSubmit
     }
-  }, [formData, onSuccess, handleSubmit])
+  }, [onSuccess, handleSubmit])
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
