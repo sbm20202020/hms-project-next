@@ -19,37 +19,50 @@ import {
   MapPin,
   Calendar,
   User,
+  Mail,
   RefreshCw,
 } from "lucide-react"
 
+import { DossierService, patientService, serviceService } from "@/services/dossierService";
+import { getTimeInDateTime } from "@/utils/helpers"
+
 export default function ReceptionPage() {
+  const [showExtraFields, setShowExtraFields] = useState(false);
   const [showNewPatientModal, setShowNewPatientModal] = useState(false)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [showOrientationModal, setShowOrientationModal] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
+  const [selectedDossierPatient, setSelectedDossierPatient] = useState(null)
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [notification, setNotification] = useState(null)
   const [filterStatus, setFilterStatus] = useState("tous")
   const [patientSearchTerm, setPatientSearchTerm] = useState("")
+  const [dossierPatientSearchTerm, setDossierPatientSearchTerm] = useState("")
 
   const [patientsEnAttente, setPatientsEnAttente] = useState([])
   const [dossierPatient, setDossierPatient] = useState([])
+  const [servicesMed, setServicesMed] = useState([])
 
   useEffect(() => {
     const fetchPatients = async () => {
-      const response = await fetch("/api/patients")
-      const data = await response.json()
+      const data = await patientService.getAll()
       setPatientsEnAttente(data)
     }
 
     const fetchDossiers = async () => {
-      const response = await fetch("/api/dossiers")
-      const data = await response.json()
+      const data = await DossierService.getAll()
       setDossierPatient(data)
     }
+
+    const fetchServices = async () => {
+      const data = await serviceService.getAll()
+      setServicesMed(data)
+    }
+
     fetchPatients()
     fetchDossiers()
+    fetchServices()
   }, [])
 
   const showNotification = (message, type = "success") => {
@@ -57,25 +70,45 @@ export default function ReceptionPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
-  const handleNewPatient = (formData) => {
+  const handleNewDossierPatient = async (formData) => {
     const newPatient = {
-      id: Date.now(),
       nom: formData.nom,
       prenom: formData.prenom,
-      heure: new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-      statut: "En attente",
-      service: "Réception",
-      priorite: formData.urgence || "normale",
+      statut: "Actif",
       telephone: formData.telephone,
-      age: formData.dateNaissance ? new Date().getFullYear() - new Date(formData.dateNaissance).getFullYear() : null,
-      motif: formData.motif || "Non spécifié",
-      typePatient: formData.typePatient || "Privé",
+      typePatient: formData.typePatient,
       convention: formData.convention || null,
+      dateNaissance: formData.dateNaissance,
+      sexe: formData.sexe,
+      email: formData.email,
+      adresse: formData.adresse,
+      ville: formData.ville || "",
+      codePostal: formData.codePostal || "",
+      numeroSecu: formData.securiteSociale || "",
+      contactUrgence: formData.nomContactUrgence || "",
+      telephoneUrgence: formData.telephoneUrgence || "",
+      allergies: formData.allergies || "",
+      antecedents: formData.antecedants || "",
+      traitements: formData.traitements || "",
     }
+    const resultPatient = await patientService.create(newPatient);
+    
+    let newDossierPatient = {
+      patientId: resultPatient.id,
+      motifDeVisite: formData.motif || "Non spécifié",
+      niveauUrgence: formData.urgence || "normale",
+    }
+    const resultDossierPatient = await DossierService.create(newDossierPatient);
+    newDossierPatient = {
+      ...newDossierPatient,
+      ...resultDossierPatient,
+      patient: resultPatient,
+    }
+    console.log(newDossierPatient)
 
-    setPatientsEnAttente((prev) => [...prev, newPatient])
+    setDossierPatient((prev) => [...prev, newDossierPatient])
     setShowNewPatientModal(false)
-    showNotification(`Dossier créé pour ${newPatient.prenom} ${newPatient.nom}`)
+    showNotification(`Dossier créé pour ${resultPatient?.prenom} ${resultPatient?.nom}`)
   }
 
   const handleSearchPatient = async (searchTerm) => {
@@ -121,6 +154,18 @@ export default function ReceptionPage() {
 
   })
 
+  const filteredDossierPatientsForSearch = dossierPatient.filter((dossierPatient) => {
+    if (!dossierPatientSearchTerm) return []
+    const searchLower = dossierPatientSearchTerm.toLowerCase()
+    return (
+      dossierPatient?.code?.toLowerCase().includes(searchLower) ||
+      dossierPatient?.patient?.prenom.toLowerCase().includes(searchLower) ||
+      dossierPatient?.patient?.nom.toLowerCase().includes(searchLower) ||
+      dossierPatient?.patient?.telephone.includes(searchLower) ||
+      dossierPatient?.niveauUrgence?.toString().includes(searchLower)
+    )
+  })
+
   const stats = {
     total: patientsEnAttente.length,
     enAttente: patientsEnAttente.filter((p) => p.statut === "En attente").length,
@@ -161,11 +206,10 @@ export default function ReceptionPage() {
 
         {notification && (
           <div
-            className={`p-4 rounded-lg border-l-4 ${
-              notification.type === "success"
-                ? "bg-green-50 border-green-400 text-green-700"
-                : "bg-red-50 border-red-400 text-red-700"
-            } animate-in slide-in-from-top duration-300`}
+            className={`p-4 rounded-lg border-l-4 ${notification.type === "success"
+              ? "bg-green-50 border-green-400 text-green-700"
+              : "bg-red-50 border-red-400 text-red-700"
+              } animate-in slide-in-from-top duration-300`}
           >
             <div className="flex items-center gap-2">
               {notification.type === "success" ? (
@@ -336,9 +380,9 @@ export default function ReceptionPage() {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-cyan-600" />
-                  Patients en Attente
+                  Dossiers de patients
                 </CardTitle>
-                <CardDescription>Liste des patients présents à la réception</CardDescription>
+                <CardDescription>Liste des dossiers de patients présents à la réception</CardDescription>
               </div>
               <div className="flex items-center gap-2">
                 <select
@@ -367,9 +411,8 @@ export default function ReceptionPage() {
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
-                        dossierPatient.niveauUrgence === "urgente" ? "bg-red-500" : "bg-cyan-500"
-                      }`}
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${dossierPatient.niveauUrgence === "urgente" ? "bg-red-500" : "bg-cyan-500"
+                        }`}
                     >
                       {dossierPatient.patient.nom.charAt(0)}
                       {dossierPatient.patient.prenom.charAt(0)}
@@ -379,7 +422,10 @@ export default function ReceptionPage() {
                         <p className="font-semibold text-gray-900">
                           {dossierPatient.patient.nom} {dossierPatient.patient.prenom}
                         </p>
-                        {dossierPatient.patient.priorite === "urgente" && (
+                        <p className="text-xs">
+                          {dossierPatient.code}
+                        </p>
+                        {dossierPatient.niveauUrgence === "urgente" && (
                           <Badge variant="destructive" className="text-xs">
                             <AlertCircle className="h-3 w-3 mr-1" />
                             URGENT
@@ -406,7 +452,7 @@ export default function ReceptionPage() {
                           {dossierPatient.patient.telephone}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">{dossierPatient.patient.motif}</p>
+                      <p className="text-xs text-gray-500 mt-1">{dossierPatient.motifDeVisite}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge variant={dossierPatient.patient.typePatient === "insured" ? "default" : "secondary"} className="text-xs">
                           {dossierPatient.patient.typePatient === "insured" ? "Conventionné" : "Privé"}
@@ -436,17 +482,17 @@ export default function ReceptionPage() {
                     </Badge>
                     <span className="text-sm text-gray-600 min-w-[100px]">{dossierPatient.service?.nom}</span>
                     {dossierPatient.statut === "attente" && (
-                    <Button
-                      size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700"
-                      onClick={() => {
-                        setSelectedPatient(dossierPatient.patient)
-                        setShowOrientationModal(true)
-                      }}
-                    >
-                    <ArrowRight className="h-4 w-4 mr-1" />
-                      Orienter
-                    </Button>
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                        onClick={() => {
+                          setSelectedDossierPatient(dossierPatient)
+                          setShowOrientationModal(true)
+                        }}
+                      >
+                        <ArrowRight className="h-4 w-4 mr-1" />
+                        Orienter
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -528,9 +574,8 @@ export default function ReceptionPage() {
                     {filteredPatientsForSearch.map((patient) => (
                       <div
                         key={patient.id}
-                        className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
-                          selectedPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
-                        }`}
+                        className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${selectedPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
+                          }`}
                         onClick={() => setSelectedPatient(patient)}
                       >
                         <div className="flex items-center gap-3">
@@ -586,7 +631,7 @@ export default function ReceptionPage() {
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                {/* <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <AlertCircle className="h-4 w-4 inline mr-1" />
                     Niveau d'urgence
@@ -595,7 +640,7 @@ export default function ReceptionPage() {
                     <option value="normale">Normale</option>
                     <option value="urgente">Urgente</option>
                   </select>
-                </div> */}
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
                   <textarea
@@ -622,29 +667,38 @@ export default function ReceptionPage() {
                         const motifEl = container.querySelector('[name="motifExistant"]')
                         if (urgenceEl) data.urgence = urgenceEl.value
                         if (motifEl) data.motif = motifEl.value
-                        console.log("Form data (existant):", data)
+                        // console.log("Form data (existant):", data)
+                        // const sequence = await DossierService.getNewCode()
+
+                        console.log("dossierPatient----------------->", dossierPatient)
 
                         let newDossier = {
                           patientId: selectedPatient.id,
                           dateCreation: new Date(),
-                          niveauUrgence: data.urgence,
                           motifDeVisite: data.motif,
                           statut: "attente",
+                          niveauUrgence: data.urgence,
                         }
-                        const response = await fetch("/api/dossiers", {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify(newDossier),
-                        }) 
-                        const res = await response.json()
+                        // const response = await fetch("/api/dossiers", {
+                        //   method: "POST",
+                        //   headers: {
+                        //     "Content-Type": "application/json",
+                        //   },
+                        //   body: JSON.stringify(newDossier),
+                        // })
+                        // const res = await response.json()
+
+                        
+                        const res = await DossierService.create(newDossier)
                         newDossier = {
                           ...newDossier,
+                          ...res,
                           patient: selectedPatient,
                           service: {},
                           id: res.id,
+
                         }
+                        console.log("newDossier----------------->", newDossier)
                         // Todo: Ajouter le dossier à la liste des dossiers en attente
                         setDossierPatient((prev) => [...prev, newDossier])
                         setShowNewPatientModal(false)
@@ -667,84 +721,161 @@ export default function ReceptionPage() {
             {/* Section Nouveau Patient */}
             <form id="newPatientSection" onSubmit={(e) => {
               e.preventDefault()
+              console.log("1. ---------------------------->")
               const formData = new FormData(e.target)
-              handleNewPatient(Object.fromEntries(formData))
+              handleNewDossierPatient(Object.fromEntries(formData))
             }} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <User className="h-4 w-4 inline mr-1" />
+                    Nom *
+                  </label>
+                  <Input name="nom" required className="border-gray-300" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <User className="h-4 w-4 inline mr-1" />
+                    Prénom *
+                  </label>
+                  <Input name="prenom" required className="border-gray-300" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Calendar className="h-4 w-4 inline mr-1" />
+                    Date de naissance
+                  </label>
+                  <Input name="dateNaissance" type="date" className="border-gray-300" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Phone className="h-4 w-4 inline mr-1" />
+                    Téléphone *
+                  </label>
+                  <Input name="telephone" type="tel" required className="border-gray-300" />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <Mail className="h-4 w-4 inline mr-1" />
+                    Email
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input name="email" type="email" className="border-gray-300 flex-1" />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="sexe" className="block text-sm font-medium text-gray-700 mb-2">
+                    <User className="h-4 w-4 inline mr-1" />
+                    Sexe *
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      name="sexe"
+                      required
+                      className="border-gray-300 flex-1 h-9 min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm"
+                      defaultValue=""
+                    >
+                      <option value="" disabled hidden>Sélectionner le sexe</option>
+                      <option value="M">Masculin</option>
+                      <option value="F">Féminin</option>
+                      <option value="Autre">Autre</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="h-4 w-4 inline mr-1" />
-                  Nom *
+                  <MapPin className="h-4 w-4 inline mr-1" />
+                  Adresse complète
                 </label>
-                <Input name="nom" required className="border-gray-300" />
+                <Input name="adresse" className="border-gray-300" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <User className="h-4 w-4 inline mr-1" />
-                  Prénom *
-                </label>
-                <Input name="prenom" required className="border-gray-300" />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="h-4 w-4 inline mr-1" />
-                  Date de naissance
-                </label>
-                <Input name="dateNaissance" type="date" className="border-gray-300" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Phone className="h-4 w-4 inline mr-1" />
-                  Téléphone *
-                </label>
-                <Input name="telephone" type="tel" required className="border-gray-300" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <MapPin className="h-4 w-4 inline mr-1" />
-                Adresse complète
-              </label>
-              <Input name="adresse" className="border-gray-300" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
-              <textarea
-                name="motif"
-                rows="3"
-                className="w-full p-2 border border-gray-300 rounded-md"
-                placeholder="Décrivez brièvement le motif de la consultation..."
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Type de patient</label>
-                <select 
-                  name="typePatient" 
+                <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
+                <textarea
+                  name="motif"
+                  rows="3"
                   className="w-full p-2 border border-gray-300 rounded-md"
-                  onChange={(e) => {
-                    // Reset convention if switching to private
-                    if (e.target.value === "Privé") {
-                      const form = e.target.form
-                      if (form && form.convention) {
-                        form.convention.value = ""
-                      }
-                    }
-                    toggleConventionSection(e.target.value)
-                  }}
-                >
-                  <option value="private">Patient privé</option>
-                  <option value="insured">Patient conventionné</option>
-                </select>
-
+                  placeholder="Décrivez brièvement le motif de la consultation..."
+                />
               </div>
-              {/* <div>
+
+              {/* Informations supplémentaires dépliables */}
+              <div className="mt-4">
+                <button
+                  type="button"
+                  className="text-cyan-700 hover:underline font-medium flex items-center gap-2 mb-2"
+                  onClick={() => setShowExtraFields((prev) => !prev)}
+                >
+                  <span>{showExtraFields ? 'Masquer' : 'Afficher'} les informations supplémentaires</span>
+                  <svg className={`h-4 w-4 transition-transform ${showExtraFields ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                {showExtraFields && (
+                  <div className="grid grid-cols-2 gap-4 bg-cyan-50 p-4 rounded-md border border-cyan-200">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Ville</label>
+                      <Input name="ville" className="border-gray-300" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Code postal</label>
+                      <Input name="codePostal" className="border-gray-300" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Numéro de sécurité sociale</label>
+                      <Input name="securiteSociale" className="border-gray-300" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Nom du contact d'urgence</label>
+                      <Input name="nomContactUrgence" className="border-gray-300" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone d'urgence</label>
+                      <Input name="telephoneUrgence" className="border-gray-300" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Allergies</label>
+                      <Input name="allergies" className="border-gray-300" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Antécédents médicaux</label>
+                      <textarea name="antecedants" rows="2" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Listez les antécédents médicaux..." />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Traitements en cours</label>
+                      <textarea name="traitements" rows="2" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Listez les traitements en cours..." />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Type de patient</label>
+                  <select
+                    name="typePatient"
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    onChange={(e) => {
+                      // Reset convention if switching to private
+                      if (e.target.value === "Privé") {
+                        const form = e.target.form
+                        if (form && form.convention) {
+                          form.convention.value = ""
+                        }
+                      }
+                      toggleConventionSection(e.target.value)
+                    }}
+                  >
+                    <option value="private">Patient privé</option>
+                    <option value="insured">Patient conventionné</option>
+                  </select>
+
+                </div>
+                <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <AlertCircle className="h-4 w-4 inline mr-1" />
                   Niveau d'urgence
@@ -753,62 +884,62 @@ export default function ReceptionPage() {
                   <option value="normale">Normale</option>
                   <option value="urgente">Urgente</option>
                 </select>
-              </div> */}
-            </div>
+              </div>
+              </div>
 
-            <div id="conventionSection" className="hidden">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Users className="h-4 w-4 inline mr-1" />
-                Convention *
-              </label>
-              <select name="convention" className="w-full p-2 border border-gray-300 rounded-md">
-                <option value="">Sélectionner une convention</option>
-                <optgroup label="Entreprises">
-                  <option value="cnss">CNSS - Caisse Nationale de Sécurité Sociale</option>
-                  <option value="cnrps">CNRPS - Caisse Nationale de Retraite et de Prévoyance Sociale</option>
-                  <option value="cnas">CNAS - Caisse Nationale des Assurances Sociales</option>
-                  <option value="cnam">CNAM - Caisse Nationale d'Assurance Maladie</option>
-                </optgroup>
-                <optgroup label="Sociétés Privées">
-                  <option value="sotra">SOTRA - Société de Transport d'Abidjan</option>
-                  <option value="sodeci">SODECI - Société de Distribution d'Eau de Côte d'Ivoire</option>
-                  <option value="cienergies">CIE - Compagnie Ivoirienne d'Électricité</option>
-                  <option value="portabidjan">Port Autonome d'Abidjan</option>
-                  <option value="aeroport">Aéroport International Félix Houphouët-Boigny</option>
-                </optgroup>
-                <optgroup label="Associations & ONG">
-                  <option value="croixrouge">Croix-Rouge Ivoirienne</option>
-                  <option value="medecinsmonde">Médecins du Monde</option>
-                  <option value="msf">MSF - Médecins Sans Frontières</option>
-                  <option value="unicef">UNICEF</option>
-                  <option value="oms">OMS - Organisation Mondiale de la Santé</option>
-                </optgroup>
-                <optgroup label="Institutions Publiques">
-                  <option value="armee">Armée de Côte d'Ivoire</option>
-                  <option value="police">Police Nationale</option>
-                  <option value="gendarmerie">Gendarmerie Nationale</option>
-                  <option value="douane">Douane Ivoirienne</option>
-                  <option value="impots">Direction Générale des Impôts</option>
-                </optgroup>
-                <optgroup label="Autres">
-                  <option value="autre">Autre convention</option>
-                </optgroup>
-              </select>
-            </div>
+              <div id="conventionSection" className="hidden">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Users className="h-4 w-4 inline mr-1" />
+                  Convention *
+                </label>
+                <select name="convention" className="w-full p-2 border border-gray-300 rounded-md">
+                  <option value="">Sélectionner une convention</option>
+                  <optgroup label="Entreprises">
+                    <option value="cnss">CNSS - Caisse Nationale de Sécurité Sociale</option>
+                    <option value="cnrps">CNRPS - Caisse Nationale de Retraite et de Prévoyance Sociale</option>
+                    <option value="cnas">CNAS - Caisse Nationale des Assurances Sociales</option>
+                    <option value="cnam">CNAM - Caisse Nationale d'Assurance Maladie</option>
+                  </optgroup>
+                  <optgroup label="Sociétés Privées">
+                    <option value="sotra">SOTRA - Société de Transport d'Abidjan</option>
+                    <option value="sodeci">SODECI - Société de Distribution d'Eau de Côte d'Ivoire</option>
+                    <option value="cienergies">CIE - Compagnie Ivoirienne d'Électricité</option>
+                    <option value="portabidjan">Port Autonome d'Abidjan</option>
+                    <option value="aeroport">Aéroport International Félix Houphouët-Boigny</option>
+                  </optgroup>
+                  <optgroup label="Associations & ONG">
+                    <option value="croixrouge">Croix-Rouge Ivoirienne</option>
+                    <option value="medecinsmonde">Médecins du Monde</option>
+                    <option value="msf">MSF - Médecins Sans Frontières</option>
+                    <option value="unicef">UNICEF</option>
+                    <option value="oms">OMS - Organisation Mondiale de la Santé</option>
+                  </optgroup>
+                  <optgroup label="Institutions Publiques">
+                    <option value="armee">Armée de Côte d'Ivoire</option>
+                    <option value="police">Police Nationale</option>
+                    <option value="gendarmerie">Gendarmerie Nationale</option>
+                    <option value="douane">Douane Ivoirienne</option>
+                    <option value="impots">Direction Générale des Impôts</option>
+                  </optgroup>
+                  <optgroup label="Autres">
+                    <option value="autre">Autre convention</option>
+                  </optgroup>
+                </select>
+              </div>
 
-            <div className="flex gap-3 pt-4 border-t">
-              <Button
-                type="submit"
-                className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-              >
-                <UserPlus className="h-4 w-4 mr-2" />
-                Créer le Dossier
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowNewPatientModal(false)}>
-                Annuler
-              </Button>
-            </div>
-          </form>
+              <div className="flex gap-3 pt-4 border-t">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Créer le Dossier
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowNewPatientModal(false)}>
+                  Annuler
+                </Button>
+              </div>
+            </form>
           </div>
         </Modal>
 
@@ -901,41 +1032,40 @@ export default function ReceptionPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <User className="h-4 w-4 inline mr-1" />
-                Sélectionner un Patient *
+                Sélectionner un Dossier *
               </label>
               <div className="relative">
                 <Input
                   placeholder="Rechercher un patient..."
-                  value={patientSearchTerm}
-                  onChange={(e) => setPatientSearchTerm(e.target.value)}
+                  value={dossierPatientSearchTerm}
+                  onChange={(e) => setDossierPatientSearchTerm(e.target.value)}
                   className="w-full pr-10"
                 />
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               </div>
-              {patientSearchTerm && (
+              {dossierPatientSearchTerm && (
                 <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-md mt-1">
-                  {filteredPatientsForSearch.map((patient) => (
+                  {filteredDossierPatientsForSearch.map((dossier) => (
                     <div
-                      key={patient.id}
-                      className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
-                        selectedPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
-                      }`}
-                      onClick={() => setSelectedPatient(patient)}
+                      key={dossier.id}
+                      className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${selectedDossierPatient?.id === dossier.id ? "bg-blue-50 border-blue-200" : ""
+                        }`}
+                      onClick={() => setSelectedDossierPatient(dossier)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                          {patient.nom.charAt(0)}
-                          {patient.prenom.charAt(0)}
+                          {dossier.patient.nom.charAt(0)}
+                          {dossier.patient.prenom.charAt(0)}
                         </div>
                         <div className="flex-1">
                           <p className="font-medium text-gray-900">
-                            {patient.nom} {patient.prenom}
+                            {dossier.patient.nom} {dossier.patient.prenom} | {dossier.code} | {dossier.niveauUrgence}
                           </p>
                           <p className="text-sm text-gray-600">
-                            {patient.age} ans • {patient.telephone} • {patient.heure}
+                            {dossier.patient.age} ans • {dossier.patient.telephone} • {dossier.patient.heure}
                           </p>
                         </div>
-                        {selectedPatient?.id === patient.id && (
+                        {selectedDossierPatient?.id === dossier.id && (
                           <CheckCircle className="h-5 w-5 text-blue-600" />
                         )}
                       </div>
@@ -945,18 +1075,21 @@ export default function ReceptionPage() {
               )}
             </div>
 
-            {selectedPatient && (
+            {selectedDossierPatient && (
               <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-200">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
-                    {selectedPatient.nom.charAt(0)}
-                    {selectedPatient.prenom.charAt(0)}
+                    {selectedDossierPatient.patient.nom.charAt(0)}
+                    {selectedDossierPatient.patient.prenom.charAt(0)}
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
-                      {selectedPatient.nom} {selectedPatient.prenom}
+                      {selectedDossierPatient.patient.nom} {selectedDossierPatient.patient.prenom} |
                     </p>
-                    <p className="text-sm text-gray-600">Arrivé à {selectedPatient.heure}</p>
+                    <p className="text-sm">
+                      {selectedDossierPatient.code}
+                    </p>
+                    <p className="text-sm text-gray-600">Arrivé à {getTimeInDateTime(selectedDossierPatient.dateCreation)}</p>
                   </div>
                 </div>
               </div>

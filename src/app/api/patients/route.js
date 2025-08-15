@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { calculerAge } from "@/utils/helpers";
 
 // Schéma de validation avec Zod
 const patientSchema = z.object({
@@ -21,17 +22,6 @@ const patientSchema = z.object({
   medecinTraitant: z.string().optional()
 });
 
-// Fonction pour calculer l'âge correctement
-function calculerAge(dateNaissance) {
-  const aujourdHui = new Date();
-  const naissance = new Date(dateNaissance);
-  let age = aujourdHui.getFullYear() - naissance.getFullYear();
-  const m = aujourdHui.getMonth() - naissance.getMonth();
-  if (m < 0 || (m === 0 && aujourdHui.getDate() < naissance.getDate())) {
-    age--;
-  }
-  return age;
-}
 
 // Récupération de tous les patients
 export async function GET(request) {
@@ -43,7 +33,10 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
+    console.log("body------------", body)
     const validation = patientSchema.parse(body);
+
+    console.log("validation------------", validation)
 
     const patientData = {
       ...validation,
