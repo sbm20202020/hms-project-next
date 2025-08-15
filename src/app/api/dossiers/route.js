@@ -41,3 +41,6 @@ export async function POST(request) {
     return NextResponse.json({ error: "Erreur lors de la création du dossier" }, { status: 500 })
   }
 }
+
+
+

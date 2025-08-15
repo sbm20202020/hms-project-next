@@ -5,6 +5,7 @@ export const DossierService = {
   create: (dossier) => api.post("/dossiers", dossier),
   getAll: () => api.get("/dossiers"),
   getById: (id) => api.get(`/dossiers/${id}`),
+  update: (id, dossier) => api.put(`/dossiers/${id}`, dossier),
 };
 
 export const patientService = {

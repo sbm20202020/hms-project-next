@@ -26,12 +26,15 @@ import {
 import { DossierService, patientService, serviceService } from "@/services/dossierService";
 import { getTimeInDateTime } from "@/utils/helpers"
 
+import SearchableSelect from "@/components/ui/search-services"
+
 export default function ReceptionPage() {
   const [showExtraFields, setShowExtraFields] = useState(false);
   const [showNewPatientModal, setShowNewPatientModal] = useState(false)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [showOrientationModal, setShowOrientationModal] = useState(false)
   const [selectedPatient, setSelectedPatient] = useState(null)
+  const [selectedService, setSelectedService] = useState(null)
   const [selectedDossierPatient, setSelectedDossierPatient] = useState(null)
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
@@ -92,7 +95,7 @@ export default function ReceptionPage() {
       traitements: formData.traitements || "",
     }
     const resultPatient = await patientService.create(newPatient);
-    
+
     let newDossierPatient = {
       patientId: resultPatient.id,
       motifDeVisite: formData.motif || "Non spécifié",
@@ -688,7 +691,7 @@ export default function ReceptionPage() {
                         // })
                         // const res = await response.json()
 
-                        
+
                         const res = await DossierService.create(newDossier)
                         newDossier = {
                           ...newDossier,
@@ -876,15 +879,15 @@ export default function ReceptionPage() {
 
                 </div>
                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <AlertCircle className="h-4 w-4 inline mr-1" />
-                  Niveau d'urgence
-                </label>
-                <select name="urgence" className="w-full p-2 border border-gray-300 rounded-md">
-                  <option value="normale">Normale</option>
-                  <option value="urgente">Urgente</option>
-                </select>
-              </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <AlertCircle className="h-4 w-4 inline mr-1" />
+                    Niveau d'urgence
+                  </label>
+                  <select name="urgence" className="w-full p-2 border border-gray-300 rounded-md">
+                    <option value="normale">Normale</option>
+                    <option value="urgente">Urgente</option>
+                  </select>
+                </div>
               </div>
 
               <div id="conventionSection" className="hidden">
@@ -1100,7 +1103,18 @@ export default function ReceptionPage() {
                 <ArrowRight className="h-4 w-4 inline mr-1" />
                 Service de destination *
               </label>
-              <select name="service" className="w-full p-3 border border-gray-300 rounded-md" required>
+              <SearchableSelect
+                options={servicesMed.map((service) => ({
+                  value: service.id,
+                  label: service.nom,
+                  description: service.description,
+                }))}
+                value={selectedService}
+                onChange={(value) => setSelectedService(value)}
+                placeholder="Sélectionner un service"
+                className="w-full"
+              />
+              {/* <select name="service" className="w-full p-3 border border-gray-300 rounded-md" required>
                 <option value="">Sélectionner un service</option>
                 <option value="Consultation Médicale">🩺 Consultation Médicale</option>
                 <option value="Infirmerie">💉 Infirmerie</option>
@@ -1108,9 +1122,9 @@ export default function ReceptionPage() {
                 <option value="Imagerie">📷 Imagerie Médicale</option>
                 <option value="Caisse">💳 Caisse</option>
                 <option value="Pharmacie">💊 Pharmacie</option>
-              </select>
+              </select> */}
             </div>
-
+            {/* 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <AlertCircle className="h-4 w-4 inline mr-1" />
@@ -1120,20 +1134,26 @@ export default function ReceptionPage() {
                 <option value="normale">🟢 Normale</option>
                 <option value="urgente">🔴 Urgente</option>
               </select>
-            </div>
+            </div> */}
 
             <div className="flex gap-3 pt-4 border-t">
               <Button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
-                disabled={!selectedPatient}
-                onClick={() => {
-                  console.log("selectedPatient", selectedPatient)
-                  setPatientsEnAttente((prev) =>
-                    prev.map((patient) =>
-                      patient.id === selectedPatient.id ? { ...patient, statut: "Orienté" } : patient,
-                    ),
-                  )
+                disabled={!selectedService || !selectedDossierPatient}
+                onClick={async () => {
+                  console.log("selectedDossierPatient", selectedDossierPatient)
+                  console.log("selectedService", selectedService)
+                  const response = await DossierService.update(selectedDossierPatient.id, {
+                    serviceId: selectedService,
+                    statut: "oriente"
+                  })
+                  console.log("response", response)
+                  // setPatientsEnAttente((prev) =>
+                  //   prev.map((patient) =>
+                  //     patient.id === selectedPatient.id ? { ...patient, statut: "Orienté" } : patient,
+                  //   ),
+                  // )
                 }}
               >
                 <ArrowRight className="h-4 w-4 mr-2" />
