@@ -26,7 +26,7 @@ export default function ReceptionPage() {
   const [showNewPatientModal, setShowNewPatientModal] = useState(false)
   const [showSearchModal, setShowSearchModal] = useState(false)
   const [showOrientationModal, setShowOrientationModal] = useState(false)
-  const [selectedDossierPatient, setselectedDossierPatient] = useState(null)
+  const [selectedPatient, setSelectedPatient] = useState(null)
   const [searchResults, setSearchResults] = useState([])
   const [isSearching, setIsSearching] = useState(false)
   const [notification, setNotification] = useState(null)
@@ -101,7 +101,7 @@ export default function ReceptionPage() {
       ),
     )
     setShowOrientationModal(false)
-    setselectedDossierPatient(null)
+    setSelectedPatient(null)
     showNotification(`Patient orienté vers ${service}`)
   }
 
@@ -442,7 +442,7 @@ export default function ReceptionPage() {
                       size="sm"
                       className="bg-emerald-600 hover:bg-emerald-700"
                       onClick={() => {
-                        setselectedDossierPatient(dossierPatient.patient)
+                        setSelectedPatient(dossierPatient.patient)
                         setShowOrientationModal(true)
                       }}
                     >
@@ -531,9 +531,9 @@ export default function ReceptionPage() {
                       <div
                         key={patient.id}
                         className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
-                          selectedDossierPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
+                          selectedPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
                         }`}
-                        onClick={() => setselectedDossierPatient(patient)}
+                        onClick={() => setSelectedPatient(patient)}
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
@@ -548,7 +548,7 @@ export default function ReceptionPage() {
                               {patient.age} ans • {patient.telephone} • {patient.heure}
                             </p>
                           </div>
-                          {selectedDossierPatient?.id === patient.id && (
+                          {selectedPatient?.id === patient.id && (
                             <CheckCircle className="h-5 w-5 text-blue-600" />
                           )}
                         </div>
@@ -558,27 +558,27 @@ export default function ReceptionPage() {
                 )}
               </div>
 
-              {selectedDossierPatient && (
+              {selectedPatient && (
                 <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-200">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      {selectedDossierPatient.nom.charAt(0)}
-                      {selectedDossierPatient.prenom.charAt(0)}
+                      {selectedPatient.nom.charAt(0)}
+                      {selectedPatient.prenom.charAt(0)}
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        {selectedDossierPatient.nom} {selectedDossierPatient.prenom}
+                        {selectedPatient.nom} {selectedPatient.prenom}
                       </p>
                       <p className="text-sm text-gray-600">
-                        {selectedDossierPatient.age} ans • {selectedDossierPatient.telephone} • {selectedDossierPatient.heure}
+                        {selectedPatient.age} ans • {selectedPatient.telephone} • {selectedPatient.heure}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={selectedDossierPatient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
-                          {selectedDossierPatient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
+                        <Badge variant={selectedPatient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
+                          {selectedPatient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
                         </Badge>
-                        {selectedDossierPatient.convention && (
+                        {selectedPatient.convention && (
                           <Badge variant="outline" className="text-xs">
-                            {selectedDossierPatient.convention}
+                            {selectedPatient.convention}
                           </Badge>
                         )}
                       </div>
@@ -613,9 +613,9 @@ export default function ReceptionPage() {
                 <Button
                   type="button"
                   className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
-                  disabled={!selectedDossierPatient}
+                  disabled={!selectedPatient}
                   onClick={async () => {
-                    if (selectedDossierPatient) {
+                    if (selectedPatient) {
                       // Collect only data from the existing patient section form fields
                       const container = document.getElementById("existingPatientSection")
                       if (container) {
@@ -627,11 +627,11 @@ export default function ReceptionPage() {
                         console.log("Form data (existant):", data)
 
                         const newDossier = {
-                          patientId: selectedDossierPatient.id,
+                          patientId: selectedPatient.id,
                           dateCreation: new Date(),
                           niveauUrgence: data.urgence,
                           motifDeVisite: data.motif,
-                          patient: selectedDossierPatient,
+                          patient: selectedPatient,
                           service: {}
                         }
                         // await fetch("/api/dossiers", {
@@ -643,10 +643,10 @@ export default function ReceptionPage() {
                         // })  
                         // Todo: Ajouter le dossier à la liste des dossiers en attente
                         console.log("newDossier------------", newDossier)
-                        // console.log("selectedDossierPatient------------", selectedDossierPatient)
+                        // console.log("selectedPatient------------", selectedPatient)
                         // setDossierPatient((prev) => [...prev, newDossier])
                         // setShowNewPatientModal(false)
-                        // setselectedDossierPatient(null)
+                        // setSelectedPatient(null)
                         // setPatientSearchTerm("")
                         // showNotification(`Dossier créé pour ${newDossier?.patient?.prenom} ${newDossier?.patient?.nom}`)
                       }
@@ -866,7 +866,7 @@ export default function ReceptionPage() {
                       <Button
                         size="sm"
                         onClick={() => {
-                          setselectedDossierPatient(patient)
+                          setSelectedPatient(patient)
                           setShowSearchModal(false)
                           setShowOrientationModal(true)
                         }}
@@ -891,7 +891,7 @@ export default function ReceptionPage() {
             onSubmit={(e) => {
               e.preventDefault()
               const formData = new FormData(e.target)
-              handleOrientation(selectedDossierPatient?.id, formData.get("service"), formData.get("priorite"))
+              handleOrientation(selectedPatient?.id, formData.get("service"), formData.get("priorite"))
             }}
             className="space-y-6"
           >
@@ -915,9 +915,9 @@ export default function ReceptionPage() {
                     <div
                       key={patient.id}
                       className={`p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
-                        selectedDossierPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
+                        selectedPatient?.id === patient.id ? "bg-blue-50 border-blue-200" : ""
                       }`}
-                      onClick={() => setselectedDossierPatient(patient)}
+                      onClick={() => setSelectedPatient(patient)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-cyan-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
@@ -932,7 +932,7 @@ export default function ReceptionPage() {
                             {patient.age} ans • {patient.telephone} • {patient.heure}
                           </p>
                         </div>
-                        {selectedDossierPatient?.id === patient.id && (
+                        {selectedPatient?.id === patient.id && (
                           <CheckCircle className="h-5 w-5 text-blue-600" />
                         )}
                       </div>
@@ -942,18 +942,18 @@ export default function ReceptionPage() {
               )}
             </div>
 
-            {selectedDossierPatient && (
+            {selectedPatient && (
               <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-lg border border-cyan-200">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
-                    {selectedDossierPatient.nom.charAt(0)}
-                    {selectedDossierPatient.prenom.charAt(0)}
+                    {selectedPatient.nom.charAt(0)}
+                    {selectedPatient.prenom.charAt(0)}
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
-                      {selectedDossierPatient.nom} {selectedDossierPatient.prenom}
+                      {selectedPatient.nom} {selectedPatient.prenom}
                     </p>
-                    <p className="text-sm text-gray-600">Arrivé à {selectedDossierPatient.heure}</p>
+                    <p className="text-sm text-gray-600">Arrivé à {selectedPatient.heure}</p>
                   </div>
                 </div>
               </div>
@@ -990,12 +990,12 @@ export default function ReceptionPage() {
               <Button
                 type="submit"
                 className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
-                disabled={!selectedDossierPatient}
+                disabled={!selectedPatient}
                 onClick={() => {
-                  console.log("selectedDossierPatient", selectedDossierPatient)
+                  console.log("selectedPatient", selectedPatient)
                   setPatientsEnAttente((prev) =>
                     prev.map((patient) =>
-                      patient.id === selectedDossierPatient.id ? { ...patient, statut: "Orienté" } : patient,
+                      patient.id === selectedPatient.id ? { ...patient, statut: "Orienté" } : patient,
                     ),
                   )
                 }}
