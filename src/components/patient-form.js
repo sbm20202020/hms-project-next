@@ -39,7 +39,6 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
       return
     }
 
-    // Préparer les données du patient
     const patientData = {
       prenom: formData.prenom,
       nom: formData.nom,
