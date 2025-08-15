@@ -610,11 +610,12 @@ export default function ReceptionPage() {
 
                         const newDossier = {
                           patientId: selectedPatient.id,
-                          statut: "En attente",
                           dateCreation: new Date(),
                           niveauUrgence: data.urgence,
                           motifDeVisite: data.motif,
                         }
+
+                        console.log("newDossier------------", newDossier)
 
                         await fetch("/api/dossiers", {
                           method: "POST",

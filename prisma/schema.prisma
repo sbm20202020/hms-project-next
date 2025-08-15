@@ -51,7 +51,7 @@ model DossierPatient {
 
   motifDeVisite  String?
   niveauUrgence  String? // rendu optionnel pour éviter problème
-  statut         String?   @default("En attente")
+  statut         String?   @default("attente")
   dateCreation   DateTime  @default(now())
   dateTraitement DateTime?
 
