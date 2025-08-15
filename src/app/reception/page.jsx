@@ -118,6 +118,7 @@ export default function ReceptionPage() {
       patient.telephone.includes(patientSearchTerm) ||
       patient.id.toString().includes(patientSearchTerm)
     )
+    
   })
 
   const stats = {
