@@ -46,7 +46,6 @@ export default function ReceptionPage() {
     const fetchDossiers = async () => {
       const response = await fetch("/api/dossiers")
       const data = await response.json()
-      console.log("dossierPatient------------", data)
       setDossierPatient(data)
     }
     fetchPatients()
@@ -106,8 +105,6 @@ export default function ReceptionPage() {
   }
 
   const filteredDossierPatients = dossierPatient.filter((dossierPatient) => {
-    console.log("dossierPatient------------", dossierPatient)
-    console.log("filterStatus------------", filterStatus)
     if (filterStatus === "tous") return true
     return dossierPatient.statut.toLowerCase().includes(filterStatus.toLowerCase())
   })
@@ -644,11 +641,11 @@ export default function ReceptionPage() {
                         // Todo: Ajouter le dossier à la liste des dossiers en attente
                         console.log("newDossier------------", newDossier)
                         // console.log("selectedPatient------------", selectedPatient)
-                        // setDossierPatient((prev) => [...prev, newDossier])
-                        // setShowNewPatientModal(false)
-                        // setSelectedPatient(null)
-                        // setPatientSearchTerm("")
-                        // showNotification(`Dossier créé pour ${newDossier?.patient?.prenom} ${newDossier?.patient?.nom}`)
+                        setDossierPatient((prev) => [...prev, newDossier])
+                        setShowNewPatientModal(false)
+                        setSelectedPatient(null)
+                        setPatientSearchTerm("")
+                        showNotification(`Dossier créé pour ${newDossier?.patient?.prenom} ${newDossier?.patient?.nom}`)
                       }
                     }
                   }}
