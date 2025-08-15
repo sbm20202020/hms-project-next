@@ -69,7 +69,7 @@ export default function ReceptionPage() {
       telephone: formData.telephone,
       age: formData.dateNaissance ? new Date().getFullYear() - new Date(formData.dateNaissance).getFullYear() : null,
       motif: formData.motif || "Non spécifié",
-      typePatient: formData.typePatient || "prive",
+      typePatient: formData.typePatient || "Privé",
       convention: formData.convention || null,
     }
 
@@ -132,7 +132,7 @@ export default function ReceptionPage() {
   const toggleConventionSection = (typePatient) => {
     const conventionSection = document.getElementById('conventionSection')
     if (conventionSection) {
-      if (typePatient === 'conventionne') {
+      if (typePatient === 'insured') {
         conventionSection.classList.remove('hidden')
       } else {
         conventionSection.classList.add('hidden')
@@ -408,8 +408,8 @@ export default function ReceptionPage() {
                       </div>
                       <p className="text-xs text-gray-500 mt-1">{dossierPatient.patient.motif}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={dossierPatient.patient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
-                          {dossierPatient.patient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
+                        <Badge variant={dossierPatient.patient.typePatient === "insured" ? "default" : "secondary"} className="text-xs">
+                          {dossierPatient.patient.typePatient === "insured" ? "Conventionné" : "Privé"}
                         </Badge>
                         {dossierPatient.patient.convention && (
                           <Badge variant="outline" className="text-xs">
@@ -571,8 +571,8 @@ export default function ReceptionPage() {
                         {selectedPatient.age} ans • {selectedPatient.telephone} • {selectedPatient.heure}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge variant={selectedPatient.typePatient === "conventionne" ? "default" : "secondary"} className="text-xs">
-                          {selectedPatient.typePatient === "conventionne" ? "Conventionné" : "Privé"}
+                        <Badge variant={selectedPatient.typePatient === "insured" ? "default" : "secondary"} className="text-xs">
+                          {selectedPatient.typePatient === "insured" ? "Conventionné" : "Privé"}
                         </Badge>
                         {selectedPatient.convention && (
                           <Badge variant="outline" className="text-xs">
@@ -586,7 +586,7 @@ export default function ReceptionPage() {
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <AlertCircle className="h-4 w-4 inline mr-1" />
                     Niveau d'urgence
@@ -595,7 +595,7 @@ export default function ReceptionPage() {
                     <option value="normale">Normale</option>
                     <option value="urgente">Urgente</option>
                   </select>
-                </div>
+                </div> */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Motif de la visite</label>
                   <textarea
@@ -639,14 +639,13 @@ export default function ReceptionPage() {
                           body: JSON.stringify(newDossier),
                         }) 
                         const res = await response.json()
-                        console.log("data------------", res)
                         newDossier = {
                           ...newDossier,
                           patient: selectedPatient,
                           service: {},
+                          id: res.id,
                         }
                         // Todo: Ajouter le dossier à la liste des dossiers en attente
-                        console.log("newDossier------------", newDossier)
                         setDossierPatient((prev) => [...prev, newDossier])
                         setShowNewPatientModal(false)
                         setSelectedPatient(null)
@@ -731,7 +730,7 @@ export default function ReceptionPage() {
                   className="w-full p-2 border border-gray-300 rounded-md"
                   onChange={(e) => {
                     // Reset convention if switching to private
-                    if (e.target.value === "prive") {
+                    if (e.target.value === "Privé") {
                       const form = e.target.form
                       if (form && form.convention) {
                         form.convention.value = ""
@@ -740,11 +739,12 @@ export default function ReceptionPage() {
                     toggleConventionSection(e.target.value)
                   }}
                 >
-                  <option value="prive">Patient privé</option>
-                  <option value="conventionne">Patient conventionné</option>
+                  <option value="private">Patient privé</option>
+                  <option value="insured">Patient conventionné</option>
                 </select>
+
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <AlertCircle className="h-4 w-4 inline mr-1" />
                   Niveau d'urgence
@@ -753,7 +753,7 @@ export default function ReceptionPage() {
                   <option value="normale">Normale</option>
                   <option value="urgente">Urgente</option>
                 </select>
-              </div>
+              </div> */}
             </div>
 
             <div id="conventionSection" className="hidden">

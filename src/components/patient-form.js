@@ -19,7 +19,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
     telephone: patient?.telephone || "",
     adresse: patient?.adresse || "",
     ville: patient?.ville || "",
-    typePatient: patient?.typePatient || "prive",
+    typePatient: patient?.typePatient || "Privé",
     convention: patient?.convention || "none",
     // Champs optionnels
     email: patient?.email || "",
@@ -48,7 +48,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
       telephone: formData.telephone,
       adresse: formData.adresse,
       ville: formData.ville,
-      typePatient: formData.typePatient === "conventionne" ? "conventionne" : "prive",
+      typePatient: formData.typePatient === "insured" ? "insured" : "private",
       convention: formData.convention === "none" ? null : formData.convention,
       dateCreation: new Date().toISOString(),
       statut: "Actif",
@@ -84,7 +84,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
   }
 
   const toggleConventionSection = (typePatient) => {
-    if (typePatient === "prive") {
+    if (typePatient === "Privé") {
       setFormData(prev => ({ ...prev, convention: "none" }))
     }
   }
@@ -207,8 +207,8 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
                   <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="prive">Patient privé</SelectItem>
-                  <SelectItem value="conventionne">Patient conventionné</SelectItem>
+                  <SelectItem value="private">Patient privé</SelectItem>
+                  <SelectItem value="insured">Patient conventionné</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -225,7 +225,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
             </div>
           </div>
 
-          {formData.typePatient === "conventionne" && (
+          {formData.typePatient === "insured" && (
             <div className="space-y-2">
               <Label htmlFor="convention" className="text-sm font-medium">
                 Convention *

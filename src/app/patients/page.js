@@ -34,7 +34,7 @@ export default function PatientsPage() {
     //   ville: "Abidjan",
     //   codePostal: "22501",
     //   numeroSecu: "1234567890123",
-    //   typePatient: "conventionne",
+    //   typePatient: "Conventionné",
     //   convention: "cnss",
     //   contactUrgence: "Jean Dupont",
     //   telephoneUrgence: "0987654321",
@@ -61,7 +61,7 @@ export default function PatientsPage() {
     //   ville: "Yamoussoukro",
     //   codePostal: "22502",
     //   numeroSecu: "9876543210987",
-    //   typePatient: "prive",
+    //   typePatient: "Privé",
     //   convention: null,
     //   contactUrgence: "Sophie Martin",
     //   telephoneUrgence: "0123456791",
@@ -188,18 +188,31 @@ export default function PatientsPage() {
       filterable: true,
       groupable: true,
       filterLabel: "Type de patient",
-      render: (value, row) => (
-        <div className="space-y-1">
-          <Badge variant={value === "conventionne" ? "default" : "secondary"} className="text-xs">
-            {value === "conventionne" ? "Conventionné" : "Privé"}
-          </Badge>
-          {row.convention && (
-            <div className="text-xs text-muted-foreground">
-              {row.convention.toUpperCase()}
-            </div>
-          )}
-        </div>
-      ),
+      render: (value, row) => {
+        let label = "";
+        let badgeVariant = "secondary";
+        if (value === "insured") {
+          label = "Conventionné";
+          badgeVariant = "default";
+        } else if (value === "private") {
+          label = "Privé";
+          badgeVariant = "secondary";
+        } else {
+          label = value;
+        }
+        return (
+          <div className="space-y-1">
+            <Badge variant={badgeVariant} className="text-xs">
+              {label}
+            </Badge>
+            {row.convention && (
+              <div className="text-xs text-muted-foreground">
+                {row.convention.toUpperCase()}
+              </div>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "statut",
