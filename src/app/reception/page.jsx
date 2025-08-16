@@ -59,7 +59,8 @@ export default function ReceptionPage() {
           DossierService.getForToday(),
           DossierService.getForYesterday(),
           serviceService.getAll()
-        ]);
+        ])
+        console.log("yesterdayDossiers", yesterdayDossiers)
   
         setPatientsEnAttente(patients)
         setDossierPatient(dossiers)

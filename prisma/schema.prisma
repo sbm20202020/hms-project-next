@@ -81,6 +81,7 @@ model Service {
   code         String?
 
   dossiers DossierPatient[]
+  employes Employe[]
 }
 
 model Role {
@@ -116,8 +117,10 @@ model Employe {
   statut       String?  @default("Actif")
   dateCreation DateTime @default(now())
   code         String?
+  serviceId    Int?
 
   dossiers DossierPatient[]
+  service Service? @relation(fields: [serviceId], references: [id])
   user     User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
 
