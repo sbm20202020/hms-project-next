@@ -21,6 +21,7 @@ import {
   User,
   Mail,
   RefreshCw,
+  Folder,
 } from "lucide-react"
 
 import { DossierService, patientService, serviceService } from "@/services/dossierService";
@@ -115,30 +116,43 @@ export default function ReceptionPage() {
   }
 
   const handleSearchPatient = async (searchTerm) => {
+    // console.log("searchTerm", searchTerm)
     setIsSearching(true)
+
+    const results = dossierPatient.filter(
+      (dossier) =>
+        dossier.patient.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dossier.patient.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dossier.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dossier.patient.telephone.includes(searchTerm),
+    )
+    console.log("results", results)
+    setSearchResults(results)
+    setIsSearching(false)
+
     // Simulate API call
-    setTimeout(() => {
-      const results = patientsEnAttente.filter(
-        (patient) =>
-          patient.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          patient.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          patient.telephone.includes(searchTerm),
-      )
-      setSearchResults(results)
-      setIsSearching(false)
-    }, 1000)
+    // setTimeout(() => {
+    //   const results = patientsEnAttente.filter(
+    //     (patient) =>
+    //       patient.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //       patient.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    //       patient.telephone.includes(searchTerm),
+    //   )
+    //   setSearchResults(results)
+    //   setIsSearching(false)
+    // }, 1000)
   }
 
-  const handleOrientation = (patientId, service, priorite) => {
-    setPatientsEnAttente((prev) =>
-      prev.map((patient) =>
-        patient.id === patientId ? { ...patient, statut: "Orienté", service, priorite } : patient,
-      ),
-    )
-    setShowOrientationModal(false)
-    setSelectedPatient(null)
-    showNotification(`Patient orienté vers ${service}`)
-  }
+  // const handleOrientation = (patientId, service, priorite) => {
+  //   setPatientsEnAttente((prev) =>
+  //     prev.map((patient) =>
+  //       patient.id === patientId ? { ...patient, statut: "Orienté", service, priorite } : patient,
+  //     ),
+  //   )
+  //   setShowOrientationModal(false)
+  //   setSelectedPatient(null)
+  //   showNotification(`Patient orienté vers ${service}`)
+  // }
 
   const filteredDossierPatients = dossierPatient.filter((dossierPatient) => {
     if (filterStatus === "tous") return true
@@ -170,11 +184,11 @@ export default function ReceptionPage() {
   })
 
   const stats = {
-    total: patientsEnAttente.length,
-    enAttente: patientsEnAttente.filter((p) => p.statut === "En attente").length,
-    orientes: patientsEnAttente.filter((p) => p.statut === "Orienté").length,
-    termines: patientsEnAttente.filter((p) => p.statut === "Terminé").length,
-    urgents: patientsEnAttente.filter((p) => p.priorite === "urgente").length,
+    total: dossierPatient.length,
+    enAttente: dossierPatient.filter((p) => p.statut === "attente").length,
+    orientes: dossierPatient.filter((p) => p.statut === "oriente").length,
+    termines: dossierPatient.filter((p) => p.statut === "termine").length,
+    urgents: dossierPatient.filter((p) => p.niveauUrgence === "urgente").length,
   }
 
   const toggleConventionSection = (typePatient) => {
@@ -228,9 +242,9 @@ export default function ReceptionPage() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           <Card className="hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-sm font-semibold text-muted-foreground font-display">Total Patients</CardTitle>
+              <CardTitle className="text-sm font-semibold text-muted-foreground font-display">Total Dossiers</CardTitle>
               <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 shadow-lg">
-                <Users className="h-5 w-5 text-white" />
+                <Folder className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -992,18 +1006,25 @@ export default function ReceptionPage() {
               <div className="mt-6 border-t pt-4">
                 <h3 className="font-medium text-gray-900 mb-3">Résultats de recherche</h3>
                 <div className="space-y-2">
-                  {searchResults.map((patient) => (
-                    <div key={patient.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                  {searchResults.map((dossier) => (
+                    <div key={dossier.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
                       <div>
                         <p className="font-medium">
-                          {patient.nom} {patient.prenom}
+                          {dossier.patient.nom} {dossier.patient.prenom}
                         </p>
-                        <p className="text-sm text-gray-600">{patient.telephone}</p>
+                        <p className="text-xs">
+                          {dossier.code}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-medium">{dossier.patient.telephone} | </span> 
+                          <span className="font-medium">{dossier.patient.email}</span> 
+                        </p>
+                        <Badge>{dossier.statut}</Badge>
                       </div>
                       <Button
                         size="sm"
                         onClick={() => {
-                          setSelectedPatient(patient)
+                          setSelectedDossierPatient(dossier) //TODO: ouvrir le dossier patient
                           setShowSearchModal(false)
                           setShowOrientationModal(true)
                         }}
@@ -1027,11 +1048,38 @@ export default function ReceptionPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              const formData = new FormData(e.target)
-              handleOrientation(selectedPatient?.id, formData.get("service"), formData.get("priorite"))
+              // const formData = new FormData(e.target)
+              // handleOrientation(selectedPatient?.id, formData.get("service"), formData.get("priorite"))
             }}
             className="space-y-6"
           >
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <ArrowRight className="h-4 w-4 inline mr-1" />
+                Service de destination *
+              </label>
+              <SearchableSelect
+                options={servicesMed.map((service) => ({
+                  value: service.id,
+                  label: service.nom,
+                  description: service.description,
+                }))}
+                value={selectedService}
+                onChange={(value) => setSelectedService(value)}
+                placeholder="Sélectionner un service"
+                className="w-full"
+              />
+              {/* <select name="service" className="w-full p-3 border border-gray-300 rounded-md" required>
+                <option value="">Sélectionner un service</option>
+                <option value="Consultation Médicale">🩺 Consultation Médicale</option>
+                <option value="Infirmerie">💉 Infirmerie</option>
+                <option value="Laboratoire">🧪 Laboratoire</option>
+                <option value="Imagerie">📷 Imagerie Médicale</option>
+                <option value="Caisse">💳 Caisse</option>
+                <option value="Pharmacie">💊 Pharmacie</option>
+              </select> */}
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <User className="h-4 w-4 inline mr-1" />
@@ -1098,32 +1146,7 @@ export default function ReceptionPage() {
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <ArrowRight className="h-4 w-4 inline mr-1" />
-                Service de destination *
-              </label>
-              <SearchableSelect
-                options={servicesMed.map((service) => ({
-                  value: service.id,
-                  label: service.nom,
-                  description: service.description,
-                }))}
-                value={selectedService}
-                onChange={(value) => setSelectedService(value)}
-                placeholder="Sélectionner un service"
-                className="w-full"
-              />
-              {/* <select name="service" className="w-full p-3 border border-gray-300 rounded-md" required>
-                <option value="">Sélectionner un service</option>
-                <option value="Consultation Médicale">🩺 Consultation Médicale</option>
-                <option value="Infirmerie">💉 Infirmerie</option>
-                <option value="Laboratoire">🧪 Laboratoire</option>
-                <option value="Imagerie">📷 Imagerie Médicale</option>
-                <option value="Caisse">💳 Caisse</option>
-                <option value="Pharmacie">💊 Pharmacie</option>
-              </select> */}
-            </div>
+            
             {/* 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1142,13 +1165,19 @@ export default function ReceptionPage() {
                 className="flex-1 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700"
                 disabled={!selectedService || !selectedDossierPatient}
                 onClick={async () => {
-                  console.log("selectedDossierPatient", selectedDossierPatient)
-                  console.log("selectedService", selectedService)
                   const response = await DossierService.update(selectedDossierPatient.id, {
                     serviceId: selectedService,
                     statut: "oriente"
                   })
-                  console.log("response", response)
+                  setDossierPatient((prev) =>
+                    prev.map((dossier) =>
+                      dossier.id === selectedDossierPatient.id ? { ...dossier, ...response, service: servicesMed.find((service) => service.id === selectedService) } : dossier,
+                    ),
+                  )
+                  showNotification(`Dossier ${selectedDossierPatient.code} orienté vers ${servicesMed.find((service) => service.id === selectedService)?.nom}`)
+                  setSelectedDossierPatient(null)
+                  setSelectedService(null)
+                  setShowOrientationModal(false)
                   // setPatientsEnAttente((prev) =>
                   //   prev.map((patient) =>
                   //     patient.id === selectedPatient.id ? { ...patient, statut: "Orienté" } : patient,
