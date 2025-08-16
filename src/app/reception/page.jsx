@@ -1091,6 +1091,7 @@ export default function ReceptionPage() {
                   value: service.id,
                   label: service.nom,
                   description: service.description,
+                  code: service.code,
                 }))}
                 value={selectedService}
                 onChange={(value) => setSelectedService(value)}
