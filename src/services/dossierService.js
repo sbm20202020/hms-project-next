@@ -6,6 +6,9 @@ export const DossierService = {
   getAll: () => api.get("/dossiers"),
   getById: (id) => api.get(`/dossiers/${id}`),
   update: (id, dossier) => api.put(`/dossiers/${id}`, dossier),
+  getForToday: () => api.get("/dossiers/today"),
+  getForYesterday: () => api.get("/dossiers/yesterday"),
+  getByDate: (date) => api.get(`/dossiers/date/${date}`),
 };
 
 export const patientService = {

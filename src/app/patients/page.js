@@ -8,6 +8,7 @@ import { Badge } from "../../components/ui/badge"
 import { Plus, Eye, Edit, Phone, Mail } from "lucide-react"
 import FormModal from "../../components/ui/form-modal"
 import PatientForm from "../../components/patient-form"
+import { patientService } from "@/services/dossierService"
 
 const statusColors = {
   Actif: "bg-green-100 text-green-800",
@@ -78,257 +79,278 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadPatients()
-  }, [])
-
-  const loadPatients = async () => {
-    try {
-      const res = await fetch("/api/patients")
-      const patientsData = res.ok ? await res.json() : []
-      
-      // Only load from API if we don't have existing patients
-      if (patientsData.length > 0) {
+    const fetchData = async () => {
+      try {
+        const [patients] = await Promise.all([
+          patientService.getAll()
+        ]);
         // Transform data to match table format
-        const transformedPatients = patientsData.map((patient) => ({
+        const transformedPatients = patients.map((patient) => ({
           ...patient,
           nomComplet: `${patient.prenom} ${patient.nom}`,
           age: new Date().getFullYear() - new Date(patient.dateNaissance).getFullYear(),
           dernierVisite: patient.derniereVisite || patient.dateCreation,
         }))
+        console.log("transformedPatients", transformedPatients)
         setPatients(transformedPatients)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      } finally {
+        setLoading(false) // ✅ Maintenant, c'est appelé après tous les fetch
       }
-      // Keep existing example data if API returns empty
-    } catch (error) {
-      console.error("Erreur lors du chargement des patients:", error)
-      // Keep existing example data on error
-    } finally {
-      setLoading(false)
-    }
+  }
+    fetchData()
+    // loadPatients()
+  }, [])
+
+// const loadPatients = async () => {
+//   try {
+//     const res = await fetch("/api/patients")
+//     const patientsData = res.ok ? await res.json() : []
+
+//     // Only load from API if we don't have existing patients
+//     if (patientsData.length > 0) {
+//       // Transform data to match table format
+//       const transformedPatients = patientsData.map((patient) => ({
+//         ...patient,
+//         nomComplet: `${patient.prenom} ${patient.nom}`,
+//         age: new Date().getFullYear() - new Date(patient.dateNaissance).getFullYear(),
+//         dernierVisite: patient.derniereVisite || patient.dateCreation,
+//       }))
+//       setPatients(transformedPatients)
+//     }
+//     // Keep existing example data if API returns empty
+//   } catch (error) {
+//     console.error("Erreur lors du chargement des patients:", error)
+//     // Keep existing example data on error
+//   } finally {
+//     setLoading(false)
+//   }
+// }
+
+const handleAddPatient = (newPatient) => {
+  if (!newPatient) {
+    console.error("No patient data provided")
+    return
   }
 
-  const handleAddPatient = (newPatient) => {
-    if (!newPatient) {
-      console.error("No patient data provided")
-      return
-    }
-
-    try {
-      fetch("/api/patients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPatient),
+  try {
+    fetch("/api/patients", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newPatient),
+    })
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Failed to add patient")
+        return r.json()
       })
-        .then(async (r) => {
-          if (!r.ok) throw new Error("Failed to add patient")
-          return r.json()
-        })
-        .then((addedPatient) => {
-          const transformedPatient = {
-            ...addedPatient,
-            nomComplet: `${addedPatient.prenom} ${addedPatient.nom}`,
-            age: new Date().getFullYear() - new Date(addedPatient.dateNaissance).getFullYear(),
-            dernierVisite: addedPatient.derniereVisite || addedPatient.dateCreation,
-          }
-          setPatients((prev) => [...prev, transformedPatient])
-          setIsNewPatientModalOpen(false)
-        })
-        .catch((err) => {
-          console.error("Error adding patient:", err)
-        })
-    } catch (error) {
-      console.error("Error adding patient:", error)
-    }
-  }
-
-  const columns = [
-    {
-      key: "nomComplet",
-      header: "Patient",
-      sortable: true,
-      render: (value, row) => (
-        <div>
-          <div className="font-medium text-foreground">{value}</div>
-          <div className="text-sm text-muted-foreground">
-            {row.age} ans • {row.sexe === "M" ? "Masculin" : row.sexe === "F" ? "Féminin" : "Autre"}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {row.ville} • {row.codePostal}
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "telephone",
-      header: "Contact",
-      render: (value, row) => (
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <Phone className="h-3 w-3 text-muted-foreground" />
-            <span className="text-sm">{value}</span>
-          </div>
-          {row.email && (
-            <div className="flex items-center space-x-2">
-              <Mail className="h-3 w-3 text-muted-foreground" />
-              <span className="text-sm">{row.email}</span>
-            </div>
-          )}
-          {row.contactUrgence && (
-            <div className="flex items-center space-x-2">
-              <Phone className="h-3 w-3 text-orange-500" />
-              <span className="text-xs text-orange-600">{row.contactUrgence}</span>
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "typePatient",
-      header: "Type & Convention",
-      sortable: true,
-      filterable: true,
-      groupable: true,
-      filterLabel: "Type de patient",
-      render: (value, row) => {
-        let label = "";
-        let badgeVariant = "secondary";
-        if (value === "insured") {
-          label = "Conventionné";
-          badgeVariant = "default";
-        } else if (value === "private") {
-          label = "Privé";
-          badgeVariant = "secondary";
-        } else {
-          label = value;
+      .then((addedPatient) => {
+        const transformedPatient = {
+          ...addedPatient,
+          nomComplet: `${addedPatient.prenom} ${addedPatient.nom}`,
+          age: new Date().getFullYear() - new Date(addedPatient.dateNaissance).getFullYear(),
+          dernierVisite: addedPatient.derniereVisite || addedPatient.dateCreation,
         }
-        return (
-          <div className="space-y-1">
-            <Badge variant={badgeVariant} className="text-xs">
-              {label}
-            </Badge>
-            {row.convention && (
-              <div className="text-xs text-muted-foreground">
-                {row.convention.toUpperCase()}
-              </div>
-            )}
+        setPatients((prev) => [...prev, transformedPatient])
+        setIsNewPatientModalOpen(false)
+      })
+      .catch((err) => {
+        console.error("Error adding patient:", err)
+      })
+  } catch (error) {
+    console.error("Error adding patient:", error)
+  }
+}
+
+const columns = [
+  {
+    key: "nomComplet",
+    header: "Patient",
+    sortable: true,
+    render: (value, row) => (
+      <div>
+        <div className="font-medium text-foreground">{value}</div>
+        <div className="text-sm text-muted-foreground">
+          {row.age} ans • {row.sexe === "M" ? "Masculin" : row.sexe === "F" ? "Féminin" : "Autre"}
+        </div>
+        <div className="text-xs text-muted-foreground mt-1">
+          {row.ville} • {row.codePostal}
+        </div>
+      </div>
+    ),
+  },
+  {
+    key: "telephone",
+    header: "Contact",
+    render: (value, row) => (
+      <div className="space-y-1">
+        <div className="flex items-center space-x-2">
+          <Phone className="h-3 w-3 text-muted-foreground" />
+          <span className="text-sm">{value}</span>
+        </div>
+        {row.email && (
+          <div className="flex items-center space-x-2">
+            <Mail className="h-3 w-3 text-muted-foreground" />
+            <span className="text-sm">{row.email}</span>
           </div>
-        );
-      },
-    },
-    {
-      key: "statut",
-      header: "Statut",
-      sortable: true,
-      filterable: true,
-      groupable: true,
-      filterLabel: "Statut du patient",
-      render: (value) => <Badge className={statusColors[value] || "bg-gray-100 text-gray-800"}>{value}</Badge>,
-    },
-    {
-      key: "service",
-      header: "Service & Médecin",
-      sortable: true,
-      filterable: true,
-      groupable: true,
-      filterLabel: "Service médical",
-      render: (value, row) => (
+        )}
+        {row.contactUrgence && (
+          <div className="flex items-center space-x-2">
+            <Phone className="h-3 w-3 text-orange-500" />
+            <span className="text-xs text-orange-600">{row.contactUrgence}</span>
+          </div>
+        )}
+      </div>
+    ),
+  },
+  {
+    key: "typePatient",
+    header: "Type & Convention",
+    sortable: true,
+    filterable: true,
+    groupable: true,
+    filterLabel: "Type de patient",
+    render: (value, row) => {
+      let label = "";
+      let badgeVariant = "secondary";
+      if (value === "insured") {
+        label = "Conventionné";
+        badgeVariant = "default";
+      } else if (value === "private") {
+        label = "Privé";
+        badgeVariant = "secondary";
+      } else {
+        label = value;
+      }
+      return (
         <div className="space-y-1">
-          <div className="font-medium text-sm">{value}</div>
-          {row.medecinTraitant && (
+          <Badge variant={badgeVariant} className="text-xs">
+            {label}
+          </Badge>
+          {row.convention && (
             <div className="text-xs text-muted-foreground">
-              {row.medecinTraitant}
+              {row.convention.toUpperCase()}
             </div>
           )}
         </div>
-      ),
+      );
     },
-    // {
-    //   key: "assurance",
-    //   header: "Assurance",
-    //   sortable: true,
-    //   filterable: true,
-    //   groupable: true,
-    //   filterLabel: "Type d'assurance",
-    //   render: (value) => <Badge variant={value === "Convention" ? "default" : "secondary"}>{value}</Badge>,
-    // },
-    {
-      key: "dernierVisite",
-      header: "Dernière Visite",
-      sortable: true,
-      render: (value) => (
-        <div className="text-sm">
-          {new Date(value).toLocaleDateString("fr-FR")}
+  },
+  {
+    key: "statut",
+    header: "Statut",
+    sortable: true,
+    filterable: true,
+    groupable: true,
+    filterLabel: "Statut du patient",
+    render: (value) => <Badge className={statusColors[value] || "bg-gray-100 text-gray-800"}>{value}</Badge>,
+  },
+  {
+    key: "service",
+    header: "Service & Médecin",
+    sortable: true,
+    filterable: true,
+    groupable: true,
+    filterLabel: "Service médical",
+    render: (value, row) => (
+      <div className="space-y-1">
+        <div className="font-medium text-sm">{value}</div>
+        {row.medecinTraitant && (
           <div className="text-xs text-muted-foreground">
-            {new Date(value).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            {row.medecinTraitant}
           </div>
+        )}
+      </div>
+    ),
+  },
+  // {
+  //   key: "assurance",
+  //   header: "Assurance",
+  //   sortable: true,
+  //   filterable: true,
+  //   groupable: true,
+  //   filterLabel: "Type d'assurance",
+  //   render: (value) => <Badge variant={value === "Convention" ? "default" : "secondary"}>{value}</Badge>,
+  // },
+  {
+    key: "dernierVisite",
+    header: "Dernière Visite",
+    sortable: true,
+    render: (value) => (
+      <div className="text-sm">
+        {new Date(value).toLocaleDateString("fr-FR")}
+        <div className="text-xs text-muted-foreground">
+          {new Date(value).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
         </div>
-      ),
-    },
-  ]
+      </div>
+    ),
+  },
+]
 
-  const actions = [
-    {
-      icon: <Eye className="h-4 w-4" />,
-      onClick: (row) => {
-        window.location.href = `/patients/${row.id}`
-      },
+const actions = [
+  {
+    icon: <Eye className="h-4 w-4" />,
+    onClick: (row) => {
+      window.location.href = `/patients/${row.id}`
     },
-    {
-      icon: <Edit className="h-4 w-4" />,
-      onClick: (row) => {
-        console.log("Edit patient:", row)
-      },
+  },
+  {
+    icon: <Edit className="h-4 w-4" />,
+    onClick: (row) => {
+      console.log("Edit patient:", row)
     },
-  ]
+  },
+]
 
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Chargement des patients...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
-  }
-
+if (loading) {
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Gestion des Patients</h1>
-            <p className="text-muted-foreground">Gérer tous les patients de l'hôpital</p>
-          </div>
-          <Button onClick={() => setIsNewPatientModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nouveau Patient
-          </Button>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Chargement des patients...</p>
         </div>
-
-        <AdvancedTable
-          title="Liste des Patients"
-          data={patients}
-          columns={columns}
-          actions={actions}
-          searchable={true}
-          filterable={true}
-          sortable={true}
-          groupable={true}
-          exportable={true}
-          pageSize={10}
-        />
-
-        <FormModal
-          isOpen={isNewPatientModalOpen}
-          onClose={() => setIsNewPatientModalOpen(false)}
-          title="Nouveau Patient"
-          description="Enregistrer un nouveau patient dans le système"
-        >
-          <PatientForm onSuccess={handleAddPatient} />
-        </FormModal>
       </div>
     </DashboardLayout>
   )
+}
+
+return (
+  <DashboardLayout>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Gestion des Patients</h1>
+          <p className="text-muted-foreground">Gérer tous les patients de l'hôpital</p>
+        </div>
+        <Button onClick={() => setIsNewPatientModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nouveau Patient
+        </Button>
+      </div>
+
+      <AdvancedTable
+        title="Liste des Patients"
+        data={patients}
+        columns={columns}
+        actions={actions}
+        searchable={true}
+        filterable={true}
+        sortable={true}
+        groupable={true}
+        exportable={true}
+        pageSize={10}
+      />
+
+      <FormModal
+        isOpen={isNewPatientModalOpen}
+        onClose={() => setIsNewPatientModalOpen(false)}
+        title="Nouveau Patient"
+        description="Enregistrer un nouveau patient dans le système"
+      >
+        <PatientForm onSuccess={handleAddPatient} />
+      </FormModal>
+    </div>
+  </DashboardLayout>
+)
 }

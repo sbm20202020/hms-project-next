@@ -47,3 +47,47 @@ export const getTimeInDateTime = (date) => {
     hour12: false
   });
 };
+
+export const variationPourcentage = (aujourdhui, hier) => {
+  if (hier === 0) {
+    return aujourdhui > 0 ? 100 : 0; // éviter division par zéro
+  }
+  return ((aujourdhui - hier) / hier * 100).toFixed(2);
+}
+
+export const isForToday = (dateStr) => {
+  const date = new Date(dateStr); // dateCreation
+  const today = new Date();
+
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+}
+
+export const isForYesterday = (dateStr) => {
+  const date = new Date(dateStr);
+  const today = new Date();
+
+  // On crée la date d'hier
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  return (
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear()
+  );
+}
+
+export function getDayRange(date = new Date()) {
+  const start = new Date(date)
+  start.setHours(0, 0, 0, 0)
+
+  const end = new Date(date)
+  end.setHours(23, 59, 59, 999)
+
+  return { start, end }
+}
+

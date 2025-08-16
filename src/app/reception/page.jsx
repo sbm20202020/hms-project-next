@@ -25,7 +25,7 @@ import {
 } from "lucide-react"
 
 import { DossierService, patientService, serviceService } from "@/services/dossierService";
-import { getTimeInDateTime } from "@/utils/helpers"
+import { getTimeInDateTime, isForToday, variationPourcentage } from "@/utils/helpers"
 
 import SearchableSelect from "@/components/ui/search-services"
 
@@ -47,27 +47,34 @@ export default function ReceptionPage() {
   const [patientsEnAttente, setPatientsEnAttente] = useState([])
   const [dossierPatient, setDossierPatient] = useState([])
   const [servicesMed, setServicesMed] = useState([])
+  const [yesterdayDossierPatient, setYesterdayDossierPatient] = useState([])
+
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchPatients = async () => {
-      const data = await patientService.getAll()
-      setPatientsEnAttente(data)
+    const fetchData = async () => {
+      try {
+        const [patients, dossiers, yesterdayDossiers, services] = await Promise.all([
+          patientService.getAll(),
+          DossierService.getForToday(),
+          DossierService.getForYesterday(),
+          serviceService.getAll()
+        ]);
+  
+        setPatientsEnAttente(patients)
+        setDossierPatient(dossiers)
+        setYesterdayDossierPatient(yesterdayDossiers)
+        setServicesMed(services)
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      } finally {
+        setLoading(false) // ✅ Maintenant, c'est appelé après tous les fetch
+      }
     }
-
-    const fetchDossiers = async () => {
-      const data = await DossierService.getAll()
-      setDossierPatient(data)
-    }
-
-    const fetchServices = async () => {
-      const data = await serviceService.getAll()
-      setServicesMed(data)
-    }
-
-    fetchPatients()
-    fetchDossiers()
-    fetchServices()
+  
+    fetchData()
   }, [])
+  
 
   const showNotification = (message, type = "success") => {
     setNotification({ message, type })
@@ -183,12 +190,19 @@ export default function ReceptionPage() {
     )
   })
 
+
+
   const stats = {
     total: dossierPatient.length,
+    yesterdayTotal: yesterdayDossierPatient.length,
     enAttente: dossierPatient.filter((p) => p.statut === "attente").length,
+    yesterdayEnAttente: yesterdayDossierPatient.filter((p) => p.statut === "attente").length,
     orientes: dossierPatient.filter((p) => p.statut === "oriente").length,
+    yesterdayOrientes: yesterdayDossierPatient.filter((p) => p.statut === "oriente").length,
     termines: dossierPatient.filter((p) => p.statut === "termine").length,
+    yesterdayTermines: yesterdayDossierPatient.filter((p) => p.statut === "termine").length,
     urgents: dossierPatient.filter((p) => p.niveauUrgence === "urgente").length,
+    yesterdayUrgents: yesterdayDossierPatient.filter((p) => p.niveauUrgence === "urgente").length,
   }
 
   const toggleConventionSection = (typePatient) => {
@@ -200,6 +214,19 @@ export default function ReceptionPage() {
         conventionSection.classList.add('hidden')
       }
     }
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-muted-foreground">Chargement des données...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    )
   }
 
   return (
@@ -251,7 +278,7 @@ export default function ReceptionPage() {
               <div className="text-3xl font-bold font-display text-foreground">{stats.total}</div>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                  <span>+12%</span>
+                  <span>{variationPourcentage(stats.total, stats.yesterdayTotal)}%</span>
                 </div>
                 <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
@@ -269,7 +296,7 @@ export default function ReceptionPage() {
               <div className="text-3xl font-bold font-display text-foreground">{stats.enAttente}</div>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                  <span>+5%</span>
+                  <span>{variationPourcentage(stats.enAttente, stats.yesterdayEnAttente)}%</span>
                 </div>
                 <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
@@ -287,7 +314,7 @@ export default function ReceptionPage() {
               <div className="text-3xl font-bold font-display text-foreground">{stats.orientes}</div>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                  <span>+8%</span>
+                  <span>{variationPourcentage(stats.orientes, stats.yesterdayOrientes)}%</span>
                 </div>
                 <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
@@ -305,7 +332,7 @@ export default function ReceptionPage() {
               <div className="text-3xl font-bold font-display text-foreground">{stats.termines}</div>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                  <span>+15%</span>
+                  <span>{variationPourcentage(stats.termines, stats.yesterdayTermines)}%</span>
                 </div>
                 <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
@@ -323,7 +350,7 @@ export default function ReceptionPage() {
               <div className="text-3xl font-bold font-display text-foreground">{stats.urgents}</div>
               <div className="flex items-center space-x-2">
                 <div className="flex items-center space-x-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                  <span>-2%</span>
+                  <span>{variationPourcentage(stats.urgents, stats.yesterdayUrgents)}%</span>
                 </div>
                 <span className="text-xs text-muted-foreground">vs hier</span>
               </div>
@@ -1016,8 +1043,8 @@ export default function ReceptionPage() {
                           {dossier.code}
                         </p>
                         <p className="text-sm text-gray-600">
-                          <span className="font-medium">{dossier.patient.telephone} | </span> 
-                          <span className="font-medium">{dossier.patient.email}</span> 
+                          <span className="font-medium">{dossier.patient.telephone} | </span>
+                          <span className="font-medium">{dossier.patient.email}</span>
                         </p>
                         <Badge>{dossier.statut}</Badge>
                       </div>
@@ -1146,7 +1173,7 @@ export default function ReceptionPage() {
               </div>
             )}
 
-            
+
             {/* 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

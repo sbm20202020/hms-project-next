@@ -11,6 +11,11 @@ export async function PUT(request, { params }) {
         where: { id: Number(id) },
         data: { serviceId, statut },
       });
+
+      const updatedPatient = await prisma.patient.update({
+        where: { id: result.patientId },
+        data: { derniereVisite: result.dateCreation },
+      });
   
       return NextResponse.json(result);
     } catch (error) {
