@@ -486,6 +486,8 @@ export default function ReceptionPage() {
                             hour: "2-digit",
                             minute: "2-digit"
                           })}
+                          {/* {getTimeInDateTime(dossierPatient.dateCreation)} */}
+                          {/* {dossierPatient.dateCreation} */}
                         </span>
                         <span className="flex items-center gap-1">
                           <User className="h-3 w-3" />
@@ -1163,7 +1165,7 @@ export default function ReceptionPage() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
-                      {selectedDossierPatient.patient.nom} {selectedDossierPatient.patient.prenom} |
+                      {selectedDossierPatient.patient.nom} {selectedDossierPatient.patient.prenom}
                     </p>
                     <p className="text-sm">
                       {selectedDossierPatient.code}
