@@ -241,7 +241,7 @@ export default function ReceptionPage() {
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Aujourd'hui</p>
-            <p className="text-2xl font-bold text-cyan-600">{new Date().toLocaleDateString("fr-FR")}</p>
+            <p className="text-2xl font-bold text-cyan-600">{new Date().toLocaleDateString("fr-FR").replace(/\//g, "-")}</p>
             <p className="text-sm text-gray-500">
               {new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
             </p>
@@ -485,7 +485,7 @@ export default function ReceptionPage() {
                             year: "numeric",
                             hour: "2-digit",
                             minute: "2-digit"
-                          })}
+                          }).replace(/\//g, "-")}
                           {/* {getTimeInDateTime(dossierPatient.dateCreation)} */}
                           {/* {dossierPatient.dateCreation} */}
                         </span>
