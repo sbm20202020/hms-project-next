@@ -17,10 +17,18 @@ export async function GET() {
         patient: true,
         service: true,
       },
-      orderBy: {
-        dateCreation: "desc",
-      },
+      orderBy: [
+        { dateCreation: "asc" },
+        // { niveauUrgence: "desc" },
+      ]
     })
+
+    // Tri manuel pour mettre les urgences en premier
+    dossiers.sort((a, b) => {
+      if (a.niveauUrgence === 'urgente' && b.niveauUrgence !== 'urgente') return -1;
+      if (a.niveauUrgence !== 'urgente' && b.niveauUrgence === 'urgente') return 1;
+      return 0;
+    });
 
     return NextResponse.json(dossiers)
   } catch (error) {
