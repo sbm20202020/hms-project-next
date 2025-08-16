@@ -61,6 +61,17 @@ model DossierPatient {
   medecinTraitant Employe? @relation(fields: [medecinTraitantId], references: [id])
 }
 
+model Log {
+  id           Int      @id @default(autoincrement())
+  message      String
+  type         String // info, warning, error
+  modelId      Int
+  modelName    String
+  action       String // create, update, delete
+  userId       Int // user id
+  dateCreation DateTime @default(now())
+}
+
 model Service {
   id           Int      @id @default(autoincrement())
   nom          String
