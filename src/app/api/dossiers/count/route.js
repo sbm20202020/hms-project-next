@@ -10,11 +10,6 @@ export async function GET() {
     const currentMonthPair = getPairMonth(currentMonth);
     const pastMonthPair= getPairMonth(Number(currentMonth)-1);
 
-    console.log("currentMonthPair--->",currentMonthPair)
-    console.log("pastMonthPair--->",pastMonthPair)
-
-
-
     const countDossiersThisMonth = await prisma.dossierPatient.count({
         where: {
           dateCreation: {
@@ -23,6 +18,7 @@ export async function GET() {
           },
         },
       });
+
     const countDossiersPastMonth = await prisma.dossierPatient.count({
         where: {
           dateCreation: {
@@ -31,7 +27,6 @@ export async function GET() {
           },
         },
       });
-
 
     return NextResponse.json({count,countDossiersThisMonth,countDossiersPastMonth})
 }
