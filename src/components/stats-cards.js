@@ -14,13 +14,8 @@ export default function StatsCards() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const moisPasse = getPreviousMonth(new Date())
-        const moisCurrent = new Date().getMonth()
-
-        const [patients, dossiersThisMonth, dossierPastMonth, dossiersCount] = await Promise.all([
+        const [patients, fullDossiersCount] = await Promise.all([
           patientService.getAll(),
-          DossierService.getByMonth(moisCurrent),
-          DossierService.getByMonth(moisPasse),
           DossierService.count(),
         ])
 
@@ -40,73 +35,68 @@ export default function StatsCards() {
           return moisCreation === moisCurrent
         })
 
+        const {count,countDossiersThisMonth,countDossiersPastMonth} = fullDossiersCount
+
+
+
         const tauxDeVariationPatients = (patientsMoisCurrent.length - patientsMoisPasse.length) / patientsMoisPasse.length * 100
-        const tauxDeVariationDossiers = (dossiersThisMonth.length - dossierPastMonth.length) / dossierPastMonth.length * 100
-        
+        const tauxDeVariationDossiers = (countDossiersThisMonth - countDossiersPastMonth) / countDossiersPastMonth * 100
+
         const changeTypePatients = tauxDeVariationPatients > 0 ? "positive" : "negative"
         const changeTypeDossiers = tauxDeVariationDossiers > 0 ? "positive" : "negative"
 
         setStats([...stats,
-          {
-            title: "Total Patients",
-            value: patientsCount,
-            change: `${tauxDeVariationPatients.toFixed(2)}%`,
-            changeType: changeTypePatients,
-            icon: Users,
-            color: "from-blue-500 to-cyan-600",
-            bgColor: "bg-blue-50",
-          },
-          {
-            title: "Total Dossiers",
-            value: dossiersCount,
-            change: `${tauxDeVariationDossiers.toFixed(2)}%`,
-            changeType: changeTypeDossiers,
-            icon: Folder,
-            color: "from-emerald-500 to-green-600",
-            bgColor: "bg-emerald-50",
-          }
+        {
+          title: "Total Patients",
+          value: patientsCount,
+          change: `${tauxDeVariationPatients.toFixed(2)}%`,
+          changeType: changeTypePatients,
+          icon: Users,
+          color: "from-blue-500 to-cyan-600",
+          bgColor: "bg-blue-50",
+        },
+        {
+          title: "Total Dossiers",
+          value: count,
+          change: `${tauxDeVariationDossiers.toFixed(2)}%`,
+          changeType: changeTypeDossiers,
+          icon: Folder,
+          color: "from-emerald-500 to-green-600",
+          bgColor: "bg-emerald-50",
+        },
+        {
+          title: "Médecins Actifs",
+          value: "89",
+          change: "+3%",
+          changeType: "positive",
+          icon: UserCheck,
+          color: "from-emerald-500 to-green-600",
+          bgColor: "bg-emerald-50",
+        },
+        {
+          title: "Rendez-vous Aujourd'hui",
+          value: "156",
+          change: "+8%",
+          changeType: "positive",
+          icon: Calendar,
+          color: "from-purple-500 to-violet-600",
+          bgColor: "bg-purple-50",
+        },
+        // {
+        //   title: "Chambres Disponibles",
+        //   value: "23",
+        //   change: "-5%",
+        //   changeType: "negative",
+        //   icon: Bed,
+        //   color: "from-orange-500 to-amber-600",
+        //   bgColor: "bg-orange-50",
+        // },
         ])
       } catch (error) {
         console.error("Error fetching data:", error)
       } finally {
         setLoading(false) // ✅ Maintenant, c'est appelé après tous les fetch
       }
-      // const totalPatients = await DossierService.patientService.getAll()
-      // console.log("totalPatients",totalPatients)
-      // // const totalMedecins = DossierService.medecinService.getAll()
-      // // const totalRendezVous = DossierService.rendezVousService.getAll()
-      // // const totalChambres = DossierService.chambreService.getAll()
-      // setStats([
-
-      // {
-      //   title: "Médecins Actifs",
-      //   value: "89",
-      //   change: "+3%",
-      //   changeType: "positive",
-      //   icon: UserCheck,
-      //   color: "from-emerald-500 to-green-600",
-      //   bgColor: "bg-emerald-50",
-      // },
-      // {
-      //   title: "Rendez-vous Aujourd'hui",
-      //   value: "156",
-      //   change: "+8%",
-      //   changeType: "positive",
-      //   icon: Calendar,
-      //   color: "from-purple-500 to-violet-600",
-      //   bgColor: "bg-purple-50",
-      // },
-      // {
-      //   title: "Chambres Disponibles",
-      //   value: "23",
-      //   change: "-5%",
-      //   changeType: "negative",
-      //   icon: Bed,
-      //   color: "from-orange-500 to-amber-600",
-      //   bgColor: "bg-orange-50",
-      // },
-      // ])
-      // setLoading(false)
     }
     fetchStats()
   }, [])

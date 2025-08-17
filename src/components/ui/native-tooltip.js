@@ -1,6 +1,6 @@
 "use client"
 
-export default function Tooltip({ text, children }) {
+export default function TooltipNative({ text, children }) {
   return (
     <div className="relative inline-flex group">
       {children}

@@ -7,7 +7,7 @@ import { FileText, Users, UserPlus, Stethoscope, Receipt, Clock, TestTube, Scan 
 import FormModal from "./ui/form-modal"
 import PatientForm from "./patient-form"
 import Link from "next/link"
-import Tooltip from "./ui/tooltip"
+import TooltipNative from "./ui/native-tooltip"
 
 export default function QuickActions() {
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
@@ -118,7 +118,7 @@ export default function QuickActions() {
                     )}
                   </Button>
                 )
-                return <Tooltip key={action.title} text={tip}>{Btn}</Tooltip>
+                return <TooltipNative key={action.title} text={tip}>{Btn}</TooltipNative>
               })}
             </div>
           </CardContent>
@@ -155,7 +155,7 @@ export default function QuickActions() {
                     )}
                   </Button>
                 )
-                return <Tooltip key={action.title} text={tip}>{Btn}</Tooltip>
+                return <TooltipNative key={action.title} text={tip}>{Btn}</TooltipNative>
               })}
             </div>
           </CardContent>

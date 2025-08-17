@@ -9,7 +9,6 @@ export const DossierService = {
   getForToday: () => api.get("/dossiers/today"),
   getForYesterday: () => api.get("/dossiers/yesterday"),
   getByDate: (date) => api.get(`/dossiers/date/${date}`),
-  getByMonth: (month) => api.get(`/dossiers/month/${month}`),
   count: () => api.get("/dossiers/count"),
 };
 

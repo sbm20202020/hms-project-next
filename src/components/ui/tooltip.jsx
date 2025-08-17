@@ -53,4 +53,3 @@ function TooltipContent({
 }
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } 
-export default Tooltip;
