@@ -45,7 +45,7 @@ export default function StatsCards() {
         const changeTypePatients = tauxDeVariationPatients > 0 ? "positive" : "negative"
         const changeTypeDossiers = tauxDeVariationDossiers > 0 ? "positive" : "negative"
 
-        setStats([...stats,
+        setStats((prev) => [...prev,
         {
           title: "Total Patients",
           value: patientsCount,
