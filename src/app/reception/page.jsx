@@ -28,6 +28,7 @@ import { DossierService, patientService, serviceService } from "@/services/dossi
 import { getTimeInDateTime, isForToday, variationPourcentage } from "@/utils/helpers"
 
 import SearchableSelect from "@/components/ui/search-services"
+import SkeletonChargement from "@/components/ui/skeleton-chargement"
 
 export default function ReceptionPage() {
   const [showExtraFields, setShowExtraFields] = useState(false);
@@ -60,8 +61,6 @@ export default function ReceptionPage() {
           DossierService.getForYesterday(),
           serviceService.getAll()
         ])
-        console.log("yesterdayDossiers", yesterdayDossiers)
-        console.log("dossiers", dossiers)
         setPatientsEnAttente(patients)
         setDossierPatient(dossiers)
         setYesterdayDossierPatient(yesterdayDossiers)
@@ -220,12 +219,7 @@ export default function ReceptionPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Chargement des données...</p>
-          </div>
-        </div>
+        <SkeletonChargement />
       </DashboardLayout>
     )
   }

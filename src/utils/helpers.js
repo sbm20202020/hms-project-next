@@ -97,4 +97,7 @@ export function generateTicketCode(serviceCode, increment) {
   return code;
 }
 
-
+export function getPreviousMonth(date) {
+  const currentMonth = date.getMonth(); // 0 = Janvier, 11 = Décembre
+  return (currentMonth - 1 + 12) % 12;  // wrap-around avec modulo
+}

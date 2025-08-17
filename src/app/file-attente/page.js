@@ -9,6 +9,8 @@ import { Clock, Users, Play, Pause, SkipForward } from "lucide-react"
 import { ticketService } from "@/services/dossierService"
 import { useEffect } from "react"
 import { getTimeInDateTime } from "@/utils/helpers"
+import { SkeletonChargementFileAttente } from "@/components/ui/skeleton-chargement"
+// import { DataTable } from "@/components/data-table"
 
 export default function FileAttentePage() {
   const [currentNumber, setCurrentNumber] = useState("A-042")
@@ -17,31 +19,77 @@ export default function FileAttentePage() {
   const [queueData, setQueueData] = useState([])
   const [currentTicket, setCurrentTicket] = useState(null)
   const [numberTicketEnAttente, setNumberTicketEnAttente] = useState(0)
+  const [numberTicketDone, setNumberTicketDone] = useState(0)
+  const [numberTicketUrgent, setNumberTicketUrgent] = useState(0)
   const [doneTickets, setDoneTickets] = useState([])
+
+  const [loading, setLoading] = useState(true)
+
+  const [tempsMoyen, setTempsMoyen] = useState(0)
+
+
+  const calculateTempsMoyenne = (doneTickets) => {
+    if (!doneTickets || doneTickets.length === 0) {
+      setTempsMoyen(0);
+      return;
+    }
+
+    const totalMinutes = doneTickets.reduce((total, ticket) => {
+      const dateCalled = new Date(ticket.dateCalled);
+      const dateDone = new Date(ticket.dateDone);
+
+      if (isNaN(dateCalled) || isNaN(dateDone)) {
+        console.warn("Ticket avec dates invalides :", ticket);
+        return total; // skip ticket invalide
+      }
+
+      const timeDiffMs = dateDone.getTime() - dateCalled.getTime();
+      const timeDiffMin = timeDiffMs / (1000 * 60); // en minutes
+
+      return total + timeDiffMin;
+    }, 0);
+
+    const moyenne = totalMinutes / doneTickets.length;
+    setTempsMoyen(Number(moyenne.toFixed(2))); // retourne un nombre propre
+  };
+
+  useEffect(() => {
+    calculateTempsMoyenne(doneTickets);
+    setNumberTicketDone(doneTickets.length)
+  }, [doneTickets]);
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [tickets] = await Promise.all([
           ticketService.getAll(),
         ])
+
+        const numberUrgentTickets = tickets.filter(ticket => ticket.dossierPatient.niveauUrgence === "urgente").length
+        
+        setNumberTicketUrgent(numberUrgentTickets)
+
         const enattenteTickets = tickets.filter(ticket => ticket.status === "attente")
         // console.log("enattenteTickets--->", enattenteTickets)
         setQueueData(enattenteTickets)
         setNumberTicketEnAttente(enattenteTickets.length)
-      
+
         const termineTickets = tickets.filter(ticket => ticket.status === "done")
-        console.log("termineTickets--->", termineTickets)
+        // console.log("termineTickets--->", termineTickets)
         setDoneTickets(termineTickets)
+        setNumberTicketDone(termineTickets.length)
 
         const enCoursTickets = tickets.filter(ticket => ticket.status === "isCalled")
-        console.log("enCoursTickets--->", enCoursTickets)
+        // console.log("enCoursTickets--->", enCoursTickets)
         setCurrentTicket(enCoursTickets[0])
-      
+        calculateTempsMoyenne(termineTickets)
+
       } catch (error) {
         console.error("Error fetching tickets:", error)
       } finally {
         console.log("tickets fetched")
-        // setLoading(false)
+        setLoading(false)
       }
     }
 
@@ -67,14 +115,13 @@ export default function FileAttentePage() {
     try {
       // Marquer le ticket actuel comme "done"
       if (currentTicket) {
-        const updatedTicket = await ticketService.update(currentTicket.id, { 
-          status: "done", 
-          dateDone: new Date() 
+        const updatedTicket = await ticketService.update(currentTicket.id, {
+          status: "done",
+          dateDone: new Date()
         });
-        setDoneTickets((prev) => [...prev, {...currentTicket,...updatedTicket}]);
-        console.log("Ticket terminé:", updatedTicket);
+        setDoneTickets((prev) => [...prev, { ...currentTicket, ...updatedTicket }]);
       }
-  
+
       // Vérifier s'il reste des tickets dans la file
       if (!queueData || queueData.length === 0) {
         console.log("La file est vide");
@@ -82,29 +129,38 @@ export default function FileAttentePage() {
         setNumberTicketEnAttente(0)
         return;
       }
-  
+
       // Extraire le prochain ticket de façon sûre
       const [nextTicketToCall, ...restQueue] = queueData;
       setQueueData(restQueue); // on retire le ticket appelé avant l'update
-  
+
       // Appeler le prochain ticket
-      const nextTicket = await ticketService.update(nextTicketToCall.id, { 
-        status: "isCalled", 
-        dateCalled: new Date() 
+      const nextTicket = await ticketService.update(nextTicketToCall.id, {
+        status: "isCalled",
+        dateCalled: new Date()
       });
-      setCurrentTicket({...nextTicketToCall,...nextTicket});
+      setCurrentTicket({ ...nextTicketToCall, ...nextTicket });
+      setNumberTicketEnAttente(numberTicketEnAttente - 1)
       console.log("Appel du ticket suivant:", nextTicket);
-  
     } catch (error) {
       console.error("Erreur lors de la mise à jour du ticket:", error);
     }
+
   };
-  
-  
+
+
 
   const handlePauseQueue = () => {
     console.log("Pausing queue")
     setIsActive(!isActive)
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <SkeletonChargementFileAttente />
+      </DashboardLayout>
+    )
   }
 
   return (
@@ -129,7 +185,7 @@ export default function FileAttentePage() {
                 <Button onClick={handleNextNumber} className="flex items-center gap-2">
                   <SkipForward className="w-4 h-4" />
                   Numéro Suivant
-                </Button> 
+                </Button>
               )
             )}
           </div>
@@ -154,7 +210,7 @@ export default function FileAttentePage() {
                 <Clock className="w-5 h-5 text-green-500" />
                 <div>
                   <p className="text-sm text-gray-600">Temps Moyen</p>
-                  <p className="text-2xl font-bold">12min</p>
+                  <p className="text-2xl font-bold">{tempsMoyen} min</p>
                 </div>
               </div>
             </CardContent>
@@ -165,7 +221,7 @@ export default function FileAttentePage() {
                 <SkipForward className="w-5 h-5 text-purple-500" />
                 <div>
                   <p className="text-sm text-gray-600">Traités Aujourd'hui</p>
-                  <p className="text-2xl font-bold">156</p>
+                  <p className="text-2xl font-bold">{numberTicketDone}</p>
                 </div>
               </div>
             </CardContent>
@@ -176,7 +232,7 @@ export default function FileAttentePage() {
                 <Users className="w-5 h-5 text-red-500" />
                 <div>
                   <p className="text-sm text-gray-600">Urgences</p>
-                  <p className="text-2xl font-bold">3</p>
+                  <p className="text-2xl font-bold">{numberTicketUrgent}</p>
                 </div>
               </div>
             </CardContent>
@@ -249,31 +305,31 @@ export default function FileAttentePage() {
             <CardTitle>Tickets Traités</CardTitle>
           </CardHeader>
           <CardContent>
-          <div className="space-y-3">
-                {doneTickets.map((item, index) => (
-                  <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-sm font-medium">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <div className="font-medium">{item.code}</div>
-                        <div className="text-sm text-gray-600">{item.dossierPatient.service.nom}</div>
-                      </div>
+            <div className="space-y-3">
+              {doneTickets.map((item, index) => (
+                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-cyan-100 text-cyan-600 rounded-full flex items-center justify-center text-sm font-medium">
+                      {index + 1}
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant={"outline"}>
-                        {item.dossierPatient.code}
-                      </Badge>
-                      <Badge variant={"default"}>
-                        {item.status === "done" ? "Traité" : ""}
-                      </Badge>
-                      <Clock className="w-4 h-4 text-gray-600" />
-                      <div className="text-sm text-gray-600">{new Date(item.dateDone).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+                    <div>
+                      <div className="font-medium">{item.code}</div>
+                      <div className="text-sm text-gray-600">{item.dossierPatient.service.nom}</div>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={"outline"}>
+                      {item.dossierPatient.code}
+                    </Badge>
+                    <Badge variant={"default"}>
+                      {item.status === "done" ? "Traité" : ""}
+                    </Badge>
+                    <Clock className="w-4 h-4 text-gray-600" />
+                    <div className="text-sm text-gray-600">{new Date(item.dateDone).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
             {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {services.map((service) => (
                 <button
@@ -295,6 +351,28 @@ export default function FileAttentePage() {
             </div> */}
           </CardContent>
         </Card>
+        {/* <Card>
+          <DataTable data={[
+              {
+                "id": 1,
+                "header": "Cover page",
+                "type": "Cover page",
+                "status": "In Process",
+                "target": "18",
+                "limit": "5",
+                "reviewer": "Eddie Lake"
+              },
+              {
+                "id": 2,
+                "header": "Cover page",
+                "type": "Cover page",
+                "status": "In Process",
+                "target": "18",
+                "limit": "5",
+                "reviewer": "Eddie Lake"
+              },
+          ]} />
+        </Card> */}
       </div>
     </DashboardLayout>
   )
