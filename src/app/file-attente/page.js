@@ -243,7 +243,7 @@ export default function FileAttentePage() {
           </Card>
         </div>
 
-        {/* Service Selection */}
+        {/* Tickets traites */}
         <Card>
           <CardHeader>
             <CardTitle>Tickets Traités</CardTitle>
