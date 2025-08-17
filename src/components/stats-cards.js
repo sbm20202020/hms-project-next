@@ -35,7 +35,7 @@ export default function StatsCards() {
           return moisCreation === moisCurrent
         })
 
-        const {count,countDossiersThisMonth,countDossiersPastMonth} = fullDossiersCount
+        const { count, countDossiersThisMonth, countDossiersPastMonth } = fullDossiersCount
 
 
 
@@ -44,44 +44,47 @@ export default function StatsCards() {
 
         const changeTypePatients = tauxDeVariationPatients > 0 ? "positive" : "negative"
         const changeTypeDossiers = tauxDeVariationDossiers > 0 ? "positive" : "negative"
-
-        setStats((prev) => [...prev,
-        {
-          title: "Total Patients",
-          value: patientsCount,
-          change: `${tauxDeVariationPatients.toFixed(2)}%`,
-          changeType: changeTypePatients,
-          icon: Users,
-          color: "from-blue-500 to-cyan-600",
-          bgColor: "bg-blue-50",
-        },
-        {
-          title: "Total Dossiers",
-          value: count,
-          change: `${tauxDeVariationDossiers.toFixed(2)}%`,
-          changeType: changeTypeDossiers,
-          icon: Folder,
-          color: "from-emerald-500 to-green-600",
-          bgColor: "bg-emerald-50",
-        },
-        {
-          title: "Médecins Actifs",
-          value: "89",
-          change: "+3%",
-          changeType: "positive",
-          icon: UserCheck,
-          color: "from-emerald-500 to-green-600",
-          bgColor: "bg-emerald-50",
-        },
-        {
-          title: "Rendez-vous Aujourd'hui",
-          value: "156",
-          change: "+8%",
-          changeType: "positive",
-          icon: Calendar,
-          color: "from-purple-500 to-violet-600",
-          bgColor: "bg-purple-50",
-        },
+        const statistique = [
+          {
+            title: "Total Patients",
+            value: patientsCount,
+            change: `${tauxDeVariationPatients.toFixed(2)}%`,
+            changeType: changeTypePatients,
+            icon: Users,
+            color: "from-blue-500 to-cyan-600",
+            bgColor: "bg-blue-50",
+          },
+          {
+            title: "Total Dossiers",
+            value: count,
+            change: `${tauxDeVariationDossiers.toFixed(2)}%`,
+            changeType: changeTypeDossiers,
+            icon: Folder,
+            color: "from-emerald-500 to-green-600",
+            bgColor: "bg-emerald-50",
+          },
+          {
+            title: "Médecins Actifs",
+            value: "89",
+            change: "+3%",
+            changeType: "positive",
+            icon: UserCheck,
+            color: "from-emerald-500 to-green-600",
+            bgColor: "bg-emerald-50",
+          },
+          {
+            title: "Rendez-vous Aujourd'hui",
+            value: "156",
+            change: "+8%",
+            changeType: "positive",
+            icon: Calendar,
+            color: "from-purple-500 to-violet-600",
+            bgColor: "bg-purple-50",
+          },
+        ]
+        setStats((prev) => [
+          ...statistique
+        ])
         // {
         //   title: "Chambres Disponibles",
         //   value: "23",
@@ -91,7 +94,6 @@ export default function StatsCards() {
         //   color: "from-orange-500 to-amber-600",
         //   bgColor: "bg-orange-50",
         // },
-        ])
       } catch (error) {
         console.error("Error fetching data:", error)
       } finally {

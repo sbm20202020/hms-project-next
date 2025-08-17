@@ -33,23 +33,34 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    console.log("body------------", body)
     const validation = patientSchema.parse(body);
 
-    console.log("validation------------", validation)
-
-    const patientData = {
+    
+    const contactData = {
       ...validation,
       dateNaissance: new Date(validation.dateNaissance),
       age: calculerAge(validation.dateNaissance),
     };
+    
+    const contact = await prisma.contact.create({
+      data: contactData,
+    });
 
-    console.log("patientData------------", patientData)
-    console.log("body------------", body)
-
+    console.log("contact----------->", contact);
+    
+    const patientData = {
+      typePatient: validation.typePatient,
+      convention: validation.convention,
+      dateCreation: new Date(validation.dateCreation),
+      statut: validation.statut,
+      service: validation.service,
+      medecinTraitant: validation.medecinTraitant,
+      contactId: contact.id,
+    };
     const patient = await prisma.patient.create({
       data: patientData,
     });
+    console.log("patient----------->", patient);
 
     return NextResponse.json(patient, { status: 201 });
   } catch (error) {
