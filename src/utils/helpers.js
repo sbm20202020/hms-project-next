@@ -91,3 +91,10 @@ export function getDayRange(date = new Date()) {
   return { start, end }
 }
 
+export function generateTicketCode(serviceCode, increment) {
+  const paddedIncrement = String(increment).padStart(3, "0"); 
+  const code = `${serviceCode.toUpperCase()}-${paddedIncrement}`;
+  return code;
+}
+
+

@@ -61,7 +61,7 @@ export default function ReceptionPage() {
           serviceService.getAll()
         ])
         console.log("yesterdayDossiers", yesterdayDossiers)
-  
+        console.log("dossiers", dossiers)
         setPatientsEnAttente(patients)
         setDossierPatient(dossiers)
         setYesterdayDossierPatient(yesterdayDossiers)
@@ -528,6 +528,7 @@ export default function ReceptionPage() {
                       {dossierPatient.statut === "attente" ? "En attente" : dossierPatient.statut === "oriente" ? "Orienté" : dossierPatient.statut === "encours" ? "En cours" : "Traité"}
                     </Badge>
                     <span className="text-sm text-gray-600 min-w-[100px]">{dossierPatient.service?.nom}</span>
+                    <span className="text-sm text-gray-600 font-bold min-w-[100px]">{dossierPatient.tickets[0]?.code}</span>
                     {dossierPatient.statut === "attente" && (
                       <Button
                         size="sm"
@@ -705,54 +706,45 @@ export default function ReceptionPage() {
                   className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
                   disabled={!selectedPatient}
                   onClick={async () => {
-                    if (selectedPatient) {
-                      // Collect only data from the existing patient section form fields
-                      const container = document.getElementById("existingPatientSection")
-                      if (container) {
-                        const data = {}
-                        const urgenceEl = container.querySelector('[name="urgenceExistant"]')
-                        const motifEl = container.querySelector('[name="motifExistant"]')
-                        if (urgenceEl) data.urgence = urgenceEl.value
-                        if (motifEl) data.motif = motifEl.value
-                        // console.log("Form data (existant):", data)
-                        // const sequence = await DossierService.getNewCode()
-
-                        console.log("dossierPatient----------------->", dossierPatient)
-
-                        let newDossier = {
-                          patientId: selectedPatient.id,
-                          dateCreation: new Date(),
-                          motifDeVisite: data.motif,
-                          statut: "attente",
-                          niveauUrgence: data.urgence,
+                    try {
+                      if (selectedPatient) {
+                        // Collect only data from the existing patient section form fields
+                        const container = document.getElementById("existingPatientSection")
+                        if (container) {
+                          const data = {}
+                          const urgenceEl = container.querySelector('[name="urgenceExistant"]')
+                          const motifEl = container.querySelector('[name="motifExistant"]')
+                          if (urgenceEl) data.urgence = urgenceEl.value
+                          if (motifEl) data.motif = motifEl.value
+                          
+                          let newDossier = {
+                            patientId: selectedPatient.id,
+                            dateCreation: new Date(),
+                            motifDeVisite: data.motif,
+                            statut: "attente",
+                            niveauUrgence: data.urgence,
+                          }
+                          
+                          const res = await DossierService.create(newDossier)
+                          newDossier = {
+                            ...newDossier,
+                            ...res,
+                            patient: selectedPatient,
+                            service: {},
+                            id: res.id,
+  
+                          }
+                          console.log("newDossier----------------->", newDossier)
+                          // Todo: Ajouter le dossier à la liste des dossiers en attente
+                          setDossierPatient((prev) => [...prev, newDossier])
+                          setShowNewPatientModal(false)
+                          setSelectedPatient(null)
+                          setPatientSearchTerm("")
+                          showNotification(`Dossier créé pour ${newDossier?.patient?.prenom} ${newDossier?.patient?.nom}`)
                         }
-                        // const response = await fetch("/api/dossiers", {
-                        //   method: "POST",
-                        //   headers: {
-                        //     "Content-Type": "application/json",
-                        //   },
-                        //   body: JSON.stringify(newDossier),
-                        // })
-                        // const res = await response.json()
-
-
-                        const res = await DossierService.create(newDossier)
-                        newDossier = {
-                          ...newDossier,
-                          ...res,
-                          patient: selectedPatient,
-                          service: {},
-                          id: res.id,
-
-                        }
-                        console.log("newDossier----------------->", newDossier)
-                        // Todo: Ajouter le dossier à la liste des dossiers en attente
-                        setDossierPatient((prev) => [...prev, newDossier])
-                        setShowNewPatientModal(false)
-                        setSelectedPatient(null)
-                        setPatientSearchTerm("")
-                        showNotification(`Dossier créé pour ${newDossier?.patient?.prenom} ${newDossier?.patient?.nom}`)
                       }
+                    } catch (error) {
+                      console.error("Error creating dossier:", error)
                     }
                   }}
                 >

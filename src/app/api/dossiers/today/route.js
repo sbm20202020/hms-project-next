@@ -16,6 +16,7 @@ export async function GET() {
       include: {
         patient: true,
         service: true,
+        tickets: true,
       },
       orderBy: [
         { dateCreation: "asc" },

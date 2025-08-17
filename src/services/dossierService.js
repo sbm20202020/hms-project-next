@@ -23,3 +23,11 @@ export const serviceService = {
   getById: (id) => api.get(`/hospital/services/${id}`),
 }
 
+export const ticketService = {
+  // create: (ticket) => api.post("/tickets", ticket),
+  // getById: (id) => api.get(`/tickets/${id}`),
+  getAll: () => api.get("/hospital/tickets"),
+  update: (id, ticket) => api.put(`/hospital/tickets/${id}`, ticket),
+}
+
+

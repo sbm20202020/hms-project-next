@@ -51,6 +51,11 @@ export async function POST(request) {
         ...newDossier,
         code,
       },
+      include: {
+        patient: true,
+        service: true,
+        tickets: true,
+      },
     })
     const updatedPatient = await prisma.patient.update({
       where: { id: result.patientId },
