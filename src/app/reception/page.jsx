@@ -29,6 +29,7 @@ import { getTimeInDateTime, isForToday, variationPourcentage } from "@/utils/hel
 
 import SearchableSelect from "@/components/ui/search-services"
 import SkeletonChargement from "@/components/ui/skeleton-chargement"
+import { showToast } from "nextjs-toast-notify"
 
 export default function ReceptionPage() {
   const [showExtraFields, setShowExtraFields] = useState(false);
@@ -75,14 +76,22 @@ export default function ReceptionPage() {
         setLoading(false) // ✅ Maintenant, c'est appelé après tous les fetch
       }
     }
-  
+
     fetchData()
   }, [])
-  
+
 
   const showNotification = (message, type = "success") => {
-    setNotification({ message, type })
-    setTimeout(() => setNotification(null), 3000)
+    showToast.success(message, {
+      duration: 4000,
+      progress: false,
+      position: "top-right",
+      transition: "popUp",
+      icon: '',
+      sound: true,
+    });
+    // setNotification({ message, type })
+    // setTimeout(() => setNotification(null), 3000)
   }
 
   const handleNewDossierPatient = async (formData) => {
@@ -120,7 +129,6 @@ export default function ReceptionPage() {
       ...resultDossierPatient,
       patient: resultPatient.patient,
     }
-    console.log(newDossierPatient)
 
     setDossierPatient((prev) => [...prev, newDossierPatient])
     setShowNewPatientModal(false)
@@ -227,21 +235,22 @@ export default function ReceptionPage() {
         </div>
 
         {notification && (
-          <div
-            className={`p-4 rounded-lg border-l-4 ${notification.type === "success"
-              ? "bg-green-50 border-green-400 text-green-700"
-              : "bg-red-50 border-red-400 text-red-700"
-              } animate-in slide-in-from-top duration-300`}
-          >
-            <div className="flex items-center gap-2">
-              {notification.type === "success" ? (
-                <CheckCircle className="h-5 w-5" />
-              ) : (
-                <AlertCircle className="h-5 w-5" />
-              )}
-              {notification.message}
-            </div>
-          </div>
+          // <div
+          //   className={`p-4 rounded-lg border-l-4 ${notification.type === "success"
+          //     ? "bg-green-50 border-green-400 text-green-700"
+          //     : "bg-red-50 border-red-400 text-red-700"
+          //     } animate-in slide-in-from-top duration-300`}
+          // >
+          //   <div className="flex items-center gap-2">
+          //     {notification.type === "success" ? (
+          //       <CheckCircle className="h-5 w-5" />
+          //     ) : (
+          //       <AlertCircle className="h-5 w-5" />
+          //     )}
+          //     {notification.message}
+          //   </div>
+          // </div>
+          <></>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
@@ -428,99 +437,108 @@ export default function ReceptionPage() {
             <div className="space-y-3">
               {filteredDossierPatients.map((dossierPatient) => (
                 <div
-                key={dossierPatient.id}
-                className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${dossierPatient.niveauUrgence === "urgente" ? "bg-red-500" : "bg-cyan-500"
-                      }`}
-                  >
-                    {dossierPatient.patient.contact?.nom.charAt(0)}
-                    {dossierPatient.patient.contact?.prenom.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-900">
-                        {dossierPatient.patient.contact?.nom} {dossierPatient.patient.contact?.prenom}
-                      </p>
-                      <p className="text-xs">
-                        {dossierPatient.code}
-                      </p>
-                      {dossierPatient.niveauUrgence === "urgente" && (
-                        <Badge variant="destructive" className="text-xs">
-                          <AlertCircle className="h-3 w-3 mr-1" />
-                          URGENT
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(dossierPatient.dateCreation).toLocaleString("fr-FR", {
-                          day: "2-digit",
-                          month: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit"
-                        }).replace(/\//g, "-")}
-                        {/* {getTimeInDateTime(dossierPatient.dateCreation)} */}
-                        {/* {dossierPatient.dateCreation} */}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {dossierPatient.patient.contact?.age} ans
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Phone className="h-3 w-3" />
-                        {dossierPatient.patient.contact?.telephone}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">{dossierPatient.motifDeVisite}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant={dossierPatient.patient.typePatient === "insured" ? "default" : "secondary"} className="text-xs">
-                        {dossierPatient.patient.typePatient === "insured" ? "Conventionné" : "Privé"}
-                      </Badge>
-                      {dossierPatient.patient.convention && (
-                        <Badge variant="outline" className="text-xs">
-                          {dossierPatient.patient.convention}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Badge
-                    variant={
-                      dossierPatient.statut === "attente"
-                        ? "secondary"
-                        : dossierPatient.statut === "oriente"
-                          ? "default"
-                          : dossierPatient.statut === "encours"
-                            ? "outline"
-                            : "destructive"
-                    }
-                    className="min-w-[80px] justify-center"
-                  >
-                    {dossierPatient.statut === "attente" ? "En attente" : dossierPatient.statut === "oriente" ? "Orienté" : dossierPatient.statut === "encours" ? "En cours" : "Traité"}
-                  </Badge>
-                  <span className="text-sm text-gray-600 min-w-[100px]">{dossierPatient.service?.nom}</span>
-                  <span className="text-sm text-gray-600 font-bold min-w-[100px]">{dossierPatient.tickets[0]?.code}</span>
-                  {dossierPatient.statut === "attente" && (
-                    <Button
-                      size="sm"
-                      className="bg-emerald-600 hover:bg-emerald-700"
-                      onClick={() => {
-                        setSelectedDossierPatient(dossierPatient)
-                        setShowOrientationModal(true)
-                      }}
+                  key={dossierPatient.id}
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${dossierPatient.niveauUrgence === "urgente" ? "bg-red-500" : "bg-cyan-500"
+                        }`}
                     >
-                      <ArrowRight className="h-4 w-4 mr-1" />
-                      Orienter
-                    </Button>
-                  )}
+                      {dossierPatient.patient.contact?.nom.charAt(0)}
+                      {dossierPatient.patient.contact?.prenom.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="font-semibold text-gray-900">
+                          {dossierPatient.patient.contact?.nom} {dossierPatient.patient.contact?.prenom}
+                        </p>
+                        <p className="text-xs">
+                          {dossierPatient.code}
+                        </p>
+                        {dossierPatient.niveauUrgence === "urgente" && (
+                          <Badge variant="destructive" className="text-xs">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            URGENT
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(dossierPatient.dateCreation).toLocaleString("fr-FR", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          }).replace(/\//g, "-")}
+                          {/* {getTimeInDateTime(dossierPatient.dateCreation)} */}
+                          {/* {dossierPatient.dateCreation} */}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {dossierPatient.patient.contact?.age} ans
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Phone className="h-3 w-3" />
+                          {dossierPatient.patient.contact?.telephone}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">{dossierPatient.motifDeVisite}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant={dossierPatient.patient.typePatient === "insured" ? "default" : "secondary"} className="text-xs">
+                          {dossierPatient.patient.typePatient === "insured" ? "Conventionné" : "Privé"}
+                        </Badge>
+                        {dossierPatient.patient.convention && (
+                          <Badge variant="outline" className="text-xs">
+                            {dossierPatient.patient.convention}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {/* <Badge
+                      variant={
+                        dossierPatient.statut === "attente"
+                          ? "secondary"
+                          : dossierPatient.statut === "oriente"
+                            ? "default"
+                            : dossierPatient.statut === "encours"
+                              ? "outline"
+                              : "destructive"
+                      }
+                      className="min-w-[80px] justify-center"
+                    >
+                      {dossierPatient.statut === "attente" ? "En attente" : dossierPatient.statut === "oriente" ? "Orienté" : dossierPatient.statut === "encours" ? "En cours" : "Traité"}
+                    
+                    </Badge> */}
+                    <span className={`text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-gray-700 dark:text-gray-300 ${dossierPatient.statut === "attente" ? "bg-gray-100 text-gray-800" : dossierPatient.statut === "oriente" ? "bg-blue-100 text-blue-800" : dossierPatient.statut === "encours" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                      {dossierPatient.statut === "attente" ? "⏳ En attente" :
+                        dossierPatient.statut === "oriente" ? "🎯 Orienté" :
+                          dossierPatient.statut === "encours" ? "🔄 En cours" :
+                            dossierPatient.statut === "traite" ? "✅ Traité" : ""}
+                    </span>
+
+
+                    <span className="text-sm text-gray-600 min-w-[100px]">{dossierPatient.service?.nom}</span>
+                    <span className="text-sm text-gray-600 font-bold min-w-[100px]">{dossierPatient.tickets[0]?.code}</span>
+                    {dossierPatient.statut === "attente" && (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                        onClick={() => {
+                          setSelectedDossierPatient(dossierPatient)
+                          setShowOrientationModal(true)
+                        }}
+                      >
+                        <ArrowRight className="h-4 w-4 mr-1" />
+                        Orienter
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
               ))}
             </div>
           </CardContent>
@@ -693,7 +711,7 @@ export default function ReceptionPage() {
                           const motifEl = container.querySelector('[name="motifExistant"]')
                           if (urgenceEl) data.urgence = urgenceEl.value
                           if (motifEl) data.motif = motifEl.value
-                          
+
                           let newDossier = {
                             patientId: selectedPatient.id,
                             dateCreation: new Date(),
@@ -701,7 +719,7 @@ export default function ReceptionPage() {
                             statut: "attente",
                             niveauUrgence: data.urgence,
                           }
-                          
+
                           const res = await DossierService.create(newDossier)
                           newDossier = {
                             ...newDossier,
@@ -709,7 +727,7 @@ export default function ReceptionPage() {
                             patient: selectedPatient,
                             service: {},
                             id: res.id,
-  
+
                           }
                           console.log("newDossier----------------->", newDossier)
                           // Todo: Ajouter le dossier à la liste des dossiers en attente
@@ -717,7 +735,7 @@ export default function ReceptionPage() {
                           setShowNewPatientModal(false)
                           setSelectedPatient(null)
                           setPatientSearchTerm("")
-                          showNotification(`Dossier créé pour ${newDossier?.patient?.prenom} ${newDossier?.patient?.nom}`)
+                          showNotification(`Dossier créé pour ${newDossier?.patient?.contact?.prenom} ${newDossier?.patient?.contact?.nom}`)
                         }
                       }
                     } catch (error) {

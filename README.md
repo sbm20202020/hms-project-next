@@ -39,3 +39,5 @@ https://www.prisma.io/docs/orm/overview/introduction/what-is-prisma
 
 npx prisma init
 npx prisma generate -> pnpm dlx prisma generate
+
+https://www.nextjstoastnotify.com

@@ -107,27 +107,27 @@ model Role {
   statut       String?  @default("Actif")
   dateCreation DateTime @default(now())
 
-  users           User[]
+  // users           User[]
   rolePermissions RolePermission[]
 }
 
-model User {
-  id           Int      @id @default(autoincrement())
-  roleId       Int
-  login        String   @unique
-  password     String
-  statut       String?  @default("Actif")
-  dateCreation DateTime @default(now())
-  contactId    Int?
+// model User {
+//   id           Int      @id @default(autoincrement())
+//   roleId       Int
+//   login        String   @unique
+//   password     String
+//   statut       String?  @default("Actif")
+//   dateCreation DateTime @default(now())
+//   contactId    Int?
 
-  role    Role     @relation(fields: [roleId], references: [id])
-  employe Employe? @relation("UserEmploye")
-  contact Contact? @relation("UserContact", fields: [contactId], references: [id])
-}
+//   role    Role     @relation(fields: [roleId], references: [id])
+//   employe Employe? @relation("UserEmploye")
+//   contact Contact? @relation("UserContact", fields: [contactId], references: [id])
+// }
 
 model Employe {
   id           Int      @id @default(autoincrement())
-  userId       Int?     @unique
+  // userId       Int?     @unique
   statut       String?  @default("Actif")
   dateCreation DateTime @default(now())
   serviceId    Int?
@@ -135,7 +135,7 @@ model Employe {
 
   dossiers DossierPatient[]
   service Service? @relation(fields: [serviceId], references: [id])
-  user     User?   @relation("UserEmploye", fields: [userId], references: [id], onDelete: SetNull)
+  // user     User?   @relation("UserEmploye", fields: [userId], references: [id], onDelete: SetNull)
   contact  Contact? @relation("EmployeContact", fields: [contactId], references: [id])
 }
 
