@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useAuth } from "@/contexts/auth-context"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,11 +11,12 @@ import { Badge } from "@/components/ui/badge"
 import { User, Mail, Phone, MapPin, Calendar, Shield } from "lucide-react"
 
 export default function ProfilePage() {
-  const { user } = useAuth()
+  // Default user data since auth is removed
+  const user = { name: "Utilisateur", email: "user@hospital.com", role: "admin", roleDisplay: "Administrateur", avatar: "U" }
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
+    name: "Utilisateur",
+    email: "user@hospital.com",
     phone: "+33 1 23 45 67 89",
     address: "123 Rue de l'Hôpital, 75001 Paris",
     speciality: "Administration",

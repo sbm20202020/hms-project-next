@@ -32,7 +32,6 @@ import { Button } from "./ui/button"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { useState, useEffect, useMemo } from "react"
-import { useAuth } from "@/contexts/auth-context"
 
 const getNavigationByRole = (role) => {
   const baseNavigation = [{ name: "Tableau de Bord", href: "/", icon: Home }]
@@ -187,9 +186,10 @@ export default function Sidebar({ open, setOpen }) {
   const router = useRouter()
   const pathname = usePathname()
   const [expandedSections, setExpandedSections] = useState({})
-  const { user } = useAuth()
+  // Default to admin role since auth is removed
+  const user = { role: "admin", name: "Utilisateur", roleDisplay: "Administrateur", avatar: "U" }
 
-  const navigation = useMemo(() => getNavigationByRole(user?.role || "admin"), [user?.role])
+  const navigation = useMemo(() => getNavigationByRole("admin"), [])
 
   // Auto-expand sections that contain the current route
   useEffect(() => {
@@ -221,7 +221,7 @@ export default function Sidebar({ open, setOpen }) {
   }, [pathname, navigation])
 
   const handleLogout = () => {
-    router.push("/login")
+    // Logout functionality removed - no action needed
   }
 
   const isActive = (href) => {

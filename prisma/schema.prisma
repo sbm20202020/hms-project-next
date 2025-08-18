@@ -95,6 +95,12 @@ model Service {
   statut       String?  @default("Actif")
   dateCreation DateTime @default(now())
   code         String?
+  isRequiredNurseService Boolean @default(false)
+  isRequiredDoctorService Boolean @default(false)
+  isRequiredPharmacistService Boolean @default(false)
+  isRequiredLabService Boolean @default(false)
+  isRequiredRadiologyService Boolean @default(false)
+  isRequiredImagingService Boolean @default(false)
 
   dossiers DossierPatient[]
   employes Employe[]
@@ -154,7 +160,7 @@ model Contact {
   numeroSecu       String?
   dateCreation DateTime @default(now())
 
-  users    User[]    @relation("UserContact")
+  // users    User[]    @relation("UserContact")
   employes Employe[] @relation("EmployeContact")
   patients Patient[] @relation("PatientContact")
 }
