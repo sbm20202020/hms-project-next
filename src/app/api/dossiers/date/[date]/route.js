@@ -16,6 +16,15 @@ export async function GET(req, { params }) {
                 lte: end,
             },
         },
+        include: {
+            patient: {
+                include: {
+                    contact: true,
+                },
+            },
+            service: true,
+            tickets: true,
+        },
     })
     return NextResponse.json(dossiers)
 }

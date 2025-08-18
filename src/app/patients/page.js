@@ -58,9 +58,10 @@ const handleAddPatient = async (newPatient) => {
     const addedPatient = await patientService.create(newPatient)
     console.log("addedPatient", addedPatient)
     const transformedPatient = {
-      ...addedPatient,
-      ...addedPatient.contact,
-      nomComplet: `${newPatient.prenom} ${newPatient.nom}`,
+      ...addedPatient.patient,
+      ...addedPatient.patient.contact,
+      nomComplet: `${addedPatient.patient.contact.prenom} ${addedPatient.patient.contact.nom}`,
+      dernierVisite: addedPatient.patient.derniereVisite,
     }
     console.log("transformedPatient", transformedPatient)
     setPatients((prev) => [...prev, transformedPatient])
@@ -77,8 +78,8 @@ const columns = [
     header: "Patient",
     sortable: true,
     render: (value, row) => (
-      console.log("value----------->", value),
-      console.log("row----------->", row),
+      // console.log("value----------->", value),
+      // console.log("row----------->", row),
       <div>
         <div className="font-medium text-foreground">{value}</div>
         <div className="text-sm text-muted-foreground">
@@ -156,24 +157,24 @@ const columns = [
     filterLabel: "Statut du patient",
     render: (value) => <Badge className={statusColors[value] || "bg-gray-100 text-gray-800"}>{value}</Badge>,
   },
-  {
-    key: "service",
-    header: "Service & Médecin",
-    sortable: true,
-    filterable: true,
-    groupable: true,
-    filterLabel: "Service médical",
-    render: (value, row) => (
-      <div className="space-y-1">
-        <div className="font-medium text-sm">{value}</div>
-        {row.medecinTraitant && (
-          <div className="text-xs text-muted-foreground">
-            {row.medecinTraitant}
-          </div>
-        )}
-      </div>
-    ),
-  },
+  // {
+  //   key: "service",
+  //   header: "Service & Médecin",
+  //   sortable: true,
+  //   filterable: true,
+  //   groupable: true,
+  //   filterLabel: "Service médical",
+  //   render: (value, row) => (
+  //     <div className="space-y-1">
+  //       <div className="font-medium text-sm">{value}</div>
+  //       {row.medecinTraitant && (
+  //         <div className="text-xs text-muted-foreground">
+  //           {row.medecinTraitant}
+  //         </div>
+  //       )}
+  //     </div>
+  //   ),
+  // },
   // {
   //   key: "assurance",
   //   header: "Assurance",
@@ -188,6 +189,8 @@ const columns = [
     header: "Dernière Visite",
     sortable: true,
     render: (value) => (
+      console.log("value", value),
+      console.log("type value", typeof value),
       <div className="text-sm">
         {new Date(value).toLocaleDateString("fr-FR")}
         <div className="text-xs text-muted-foreground">

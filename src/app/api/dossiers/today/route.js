@@ -14,15 +14,23 @@ export async function GET() {
         },
       },
       include: {
-        patient: true,
+        patient: {
+            include: {
+                contact: true,
+            },
+        },
         service: true,
         tickets: true,
       },
       orderBy: [
         { dateCreation: "asc" },
-        // { niveauUrgence: "desc" },
       ]
     })
+
+    // console.log("dossiers", dossiers)
+    for (let dossier of dossiers) {
+      console.log("dossier", dossier.patient)
+    }
 
     // Tri manuel pour mettre les urgences en premier
     dossiers.sort((a, b) => {

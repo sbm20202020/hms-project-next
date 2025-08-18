@@ -62,7 +62,7 @@ export async function POST(request) {
 
     // console.log("body----------->", body);
     // console.log("validation----------->", validation);
-
+    
     const contactData = {
       nom: validation.nom,
       prenom: validation.prenom,
@@ -86,7 +86,6 @@ export async function POST(request) {
     const patientData = {
       typePatient: validation.typePatient,
       convention: validation.convention,
-      dateCreation: new Date(validation.dateCreation),
       statut: validation.statut,
       service: validation.service,
       medecinTraitant: validation.medecinTraitant,
@@ -97,7 +96,10 @@ export async function POST(request) {
       traitements: validation.traitements,
       contactId: contact.id,
     };
+
     const patient = await prisma.patient.create({data: patientData});
+
+    console.log("patient----------->", patient);
 
     return NextResponse.json({patient: {...patient, contact}}, { status: 201 });
   } catch (error) {

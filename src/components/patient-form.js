@@ -51,7 +51,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
       convention: formData.convention === "none" ? null : formData.convention,
       dateCreation: new Date().toISOString(),
       statut: "Actif",
-      service: "Général",
+      service: "",
       medecinTraitant: "",
     }
 

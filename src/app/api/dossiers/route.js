@@ -4,20 +4,14 @@ import { generateCode } from "@/utils/helpers";
 
 export async function GET() {
   const dossiers = await prisma.dossierPatient.findMany({
-    select: {
-      id: true,
-      statut: true,
-      patientId: true,
-      serviceId: true,
-      patient: true,
+    include: {
+      patient: {
+        include: {
+          contact: true,
+        },
+      },
       service: true,
-      code: true,
-      dateCreation: true,
-      niveauUrgence: true,
-      motifDeVisite: true,
-      statut: true,
-      dateTraitement: true,
-      medecinTraitant: true,
+      tickets: true,
     },
   })
 
@@ -57,8 +51,9 @@ export async function POST(request) {
         tickets: true,
       },
     })
+
     const updatedPatient = await prisma.patient.update({
-      where: { id: result.patientId },
+      where: { id: newDossier.patientId },
       data: { derniereVisite: result.dateCreation },
     });
     return NextResponse.json(result, { status: 201 })
