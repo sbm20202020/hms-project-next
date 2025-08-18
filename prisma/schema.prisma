@@ -16,17 +16,6 @@ datasource db {
 
 model Patient {
   id               Int       @id @default(autoincrement())
-  nom              String
-  prenom           String
-  dateNaissance    DateTime
-  age              Int
-  sexe             String?
-  telephone        String?
-  email            String?
-  adresse          String?
-  ville            String?
-  codePostal       String?
-  numeroSecu       String?
   typePatient      String?
   convention       String?
   contactUrgence   String?
@@ -34,11 +23,11 @@ model Patient {
   allergies        String?
   antecedents      String?
   traitements      String?
-  dateCreation     DateTime  @default(now())
   statut           String?
   service          String?
   medecinTraitant  String?
   derniereVisite   DateTime? @default(now())
+  dateCreation     DateTime  @default(now())
   contactId        Int?
 
   dossiers DossierPatient[] // Relation vers DossierPatient
@@ -153,7 +142,7 @@ model Employe {
 model Contact {
   id           Int      @id @default(autoincrement())
   nom          String?
-  prenom       String?
+  prenom      String?
   email        String?
   telephone    String?
   dateNaissance    DateTime?
@@ -161,6 +150,8 @@ model Contact {
   sexe             String?
   adresse          String?
   ville            String?
+  codePostal       String?
+  numeroSecu       String?
   dateCreation DateTime @default(now())
 
   users    User[]    @relation("UserContact")

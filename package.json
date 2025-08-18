@@ -74,7 +74,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -83,7 +82,6 @@
     "prisma": "^6.14.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.4",
-    "tw-animate-css": "1.3.3",
-    "typescript": "^5"
+    "tw-animate-css": "1.3.3"
   }
 }

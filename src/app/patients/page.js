@@ -20,62 +20,7 @@ const statusColors = {
 
 export default function PatientsPage() {
   const [isNewPatientModalOpen, setIsNewPatientModalOpen] = useState(false)
-  const [patients, setPatients] = useState([
-    // {
-    //   id: 1,
-    //   prenom: "Marie",
-    //   nom: "Dupont",
-    //   nomComplet: "Marie Dupont",
-    //   dateNaissance: "1980-05-15",
-    //   age: 44,
-    //   sexe: "F",
-    //   telephone: "0123456789",
-    //   email: "marie.dupont@email.com",
-    //   adresse: "123 Rue de la Paix",
-    //   ville: "Abidjan",
-    //   codePostal: "22501",
-    //   numeroSecu: "1234567890123",
-    //   typePatient: "Conventionné",
-    //   convention: "cnss",
-    //   contactUrgence: "Jean Dupont",
-    //   telephoneUrgence: "0987654321",
-    //   allergies: "Pénicilline",
-    //   antecedents: "Hypertension",
-    //   traitements: "Amlodipine 5mg",
-    //   dateCreation: "2024-01-15T10:00:00Z",
-    //   statut: "Actif",
-    //   service: "Cardiologie",
-    //   medecinTraitant: "Dr. Martin",
-    //   derniereVisite: "2024-01-20T14:30:00Z",
-    // },
-    // {
-    //   id: 2,
-    //   prenom: "Pierre",
-    //   nom: "Martin",
-    //   nomComplet: "Pierre Martin",
-    //   dateNaissance: "1975-12-03",
-    //   age: 49,
-    //   sexe: "M",
-    //   telephone: "0123456790",
-    //   email: "pierre.martin@email.com",
-    //   adresse: "456 Avenue des Fleurs",
-    //   ville: "Yamoussoukro",
-    //   codePostal: "22502",
-    //   numeroSecu: "9876543210987",
-    //   typePatient: "Privé",
-    //   convention: null,
-    //   contactUrgence: "Sophie Martin",
-    //   telephoneUrgence: "0123456791",
-    //   allergies: "Aucune",
-    //   antecedents: "Diabète type 2",
-    //   traitements: "Metformine 500mg",
-    //   dateCreation: "2024-01-10T09:00:00Z",
-    //   statut: "Actif",
-    //   service: "Endocrinologie",
-    //   medecinTraitant: "Dr. Bernard",
-    //   derniereVisite: "2024-01-18T11:00:00Z",
-    // },
-  ])
+  const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -87,11 +32,10 @@ export default function PatientsPage() {
         // Transform data to match table format
         const transformedPatients = patients.map((patient) => ({
           ...patient,
-          nomComplet: `${patient.prenom} ${patient.nom}`,
-          age: new Date().getFullYear() - new Date(patient.dateNaissance).getFullYear(),
-          dernierVisite: patient.derniereVisite || patient.dateCreation,
+          ...patient.contact,
+          nomComplet: `${patient.contact.prenom} ${patient.contact.nom}`,
+          dernierVisite: patient.derniereVisite,
         }))
-        console.log("transformedPatients", transformedPatients)
         setPatients(transformedPatients)
       } catch (error) {
         console.error("Error fetching data:", error)
@@ -103,60 +47,25 @@ export default function PatientsPage() {
     // loadPatients()
   }, [])
 
-// const loadPatients = async () => {
-//   try {
-//     const res = await fetch("/api/patients")
-//     const patientsData = res.ok ? await res.json() : []
-
-//     // Only load from API if we don't have existing patients
-//     if (patientsData.length > 0) {
-//       // Transform data to match table format
-//       const transformedPatients = patientsData.map((patient) => ({
-//         ...patient,
-//         nomComplet: `${patient.prenom} ${patient.nom}`,
-//         age: new Date().getFullYear() - new Date(patient.dateNaissance).getFullYear(),
-//         dernierVisite: patient.derniereVisite || patient.dateCreation,
-//       }))
-//       setPatients(transformedPatients)
-//     }
-//     // Keep existing example data if API returns empty
-//   } catch (error) {
-//     console.error("Erreur lors du chargement des patients:", error)
-//     // Keep existing example data on error
-//   } finally {
-//     setLoading(false)
-//   }
-// }
-
-const handleAddPatient = (newPatient) => {
+const handleAddPatient = async (newPatient) => {
   if (!newPatient) {
     console.error("No patient data provided")
     return
   }
 
   try {
-    fetch("/api/patients", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newPatient),
-    })
-      .then(async (r) => {
-        if (!r.ok) throw new Error("Failed to add patient")
-        return r.json()
-      })
-      .then((addedPatient) => {
-        const transformedPatient = {
-          ...addedPatient,
-          nomComplet: `${addedPatient.prenom} ${addedPatient.nom}`,
-          age: new Date().getFullYear() - new Date(addedPatient.dateNaissance).getFullYear(),
-          dernierVisite: addedPatient.derniereVisite || addedPatient.dateCreation,
-        }
-        setPatients((prev) => [...prev, transformedPatient])
-        setIsNewPatientModalOpen(false)
-      })
-      .catch((err) => {
-        console.error("Error adding patient:", err)
-      })
+    console.log("newPatient", newPatient)
+    const addedPatient = await patientService.create(newPatient)
+    console.log("addedPatient", addedPatient)
+    const transformedPatient = {
+      ...addedPatient,
+      ...addedPatient.contact,
+      nomComplet: `${newPatient.prenom} ${newPatient.nom}`,
+    }
+    console.log("transformedPatient", transformedPatient)
+    setPatients((prev) => [...prev, transformedPatient])
+    setIsNewPatientModalOpen(false)
+
   } catch (error) {
     console.error("Error adding patient:", error)
   }
@@ -168,6 +77,8 @@ const columns = [
     header: "Patient",
     sortable: true,
     render: (value, row) => (
+      console.log("value----------->", value),
+      console.log("row----------->", row),
       <div>
         <div className="font-medium text-foreground">{value}</div>
         <div className="text-sm text-muted-foreground">
@@ -197,7 +108,7 @@ const columns = [
         {row.contactUrgence && (
           <div className="flex items-center space-x-2">
             <Phone className="h-3 w-3 text-orange-500" />
-            <span className="text-xs text-orange-600">{row.contactUrgence}</span>
+            <span className="text-xs text-orange-600">{row.contactUrgence} • {row.telephoneUrgence}</span>
           </div>
         )}
       </div>

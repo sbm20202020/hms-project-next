@@ -19,13 +19,38 @@ const patientSchema = z.object({
   dateCreation: z.string().optional(),
   statut: z.string().optional(),
   service: z.string().optional(),
-  medecinTraitant: z.string().optional()
+  medecinTraitant: z.string().optional(),
+  contactUrgence: z.string().optional(),
+  telephoneUrgence: z.string().optional(),
+  allergies: z.string().optional(),
+  antecedents: z.string().optional(),
+  traitements: z.string().optional(),
+  email: z.string().optional(),
+  codePostal: z.string().optional(),
+  numeroSecu: z.string().optional(),
+  convention: z.string().nullable().optional(),
 });
 
 
 // Récupération de tous les patients
 export async function GET(request) {
-  const patients = await prisma.patient.findMany();
+  const patients = await prisma.patient.findMany({include: {
+    contact: {
+      select: {
+        nom: true,
+        prenom: true,
+        email: true,
+        telephone: true,
+        dateNaissance: true,
+        age: true,
+        sexe: true,
+        adresse: true,
+        ville: true,
+        codePostal: true,
+        numeroSecu: true,
+      }
+    }
+  }});
   return NextResponse.json(patients);
 }
 
@@ -35,9 +60,19 @@ export async function POST(request) {
     const body = await request.json();
     const validation = patientSchema.parse(body);
 
-    
+    // console.log("body----------->", body);
+    // console.log("validation----------->", validation);
+
     const contactData = {
-      ...validation,
+      nom: validation.nom,
+      prenom: validation.prenom,
+      sexe: validation.sexe,
+      telephone: validation.telephone,
+      adresse: validation.adresse,
+      ville: validation.ville,
+      codePostal: validation.codePostal,
+      numeroSecu: validation.numeroSecu,
+      email: validation.email,
       dateNaissance: new Date(validation.dateNaissance),
       age: calculerAge(validation.dateNaissance),
     };
@@ -46,7 +81,7 @@ export async function POST(request) {
       data: contactData,
     });
 
-    console.log("contact----------->", contact);
+    // console.log("contact----------->", contact);
     
     const patientData = {
       typePatient: validation.typePatient,
@@ -55,14 +90,16 @@ export async function POST(request) {
       statut: validation.statut,
       service: validation.service,
       medecinTraitant: validation.medecinTraitant,
+      contactUrgence: validation.contactUrgence,
+      telephoneUrgence: validation.telephoneUrgence,
+      allergies: validation.allergies,
+      antecedents: validation.antecedents,
+      traitements: validation.traitements,
       contactId: contact.id,
     };
-    const patient = await prisma.patient.create({
-      data: patientData,
-    });
-    console.log("patient----------->", patient);
+    const patient = await prisma.patient.create({data: patientData});
 
-    return NextResponse.json(patient, { status: 201 });
+    return NextResponse.json({patient: {...patient, contact}}, { status: 201 });
   } catch (error) {
     console.error("Erreur POST patient :", error);
     return NextResponse.json(
