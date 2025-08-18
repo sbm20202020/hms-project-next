@@ -154,7 +154,7 @@ model Contact {
   numeroSecu       String?
   dateCreation DateTime @default(now())
 
-  users    User[]    @relation("UserContact")
+  // users    User[]    @relation("UserContact")
   employes Employe[] @relation("EmployeContact")
   patients Patient[] @relation("PatientContact")
 }
