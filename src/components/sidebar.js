@@ -188,16 +188,15 @@ export default function Sidebar({ open, setOpen }) {
   const router = useRouter()
   const pathname = usePathname()
   const [expandedSections, setExpandedSections] = useState({})
-  // Default to admin role since auth is removed
-  // const { data: session } = useSession();
-
-  // console.log(session);
-  // const user = { role: "admin", name: "Utilisateur", roleDisplay: "Administrateur", avatar: "U" }
-  // const user = { role: "admin", name: session, roleDisplay: "Administrateur", avatar: "U" }\
   const { data: session } = useSession();
-  const user = { role: "admin", name: session?.user?.name, roleDisplay: "Administrateur", avatar: "U" }
+
+  // console.log("session------->", session)
+  const avatar = session?.user?.contact?.nom.charAt(0).toUpperCase()+session?.user?.contact?.prenom.charAt(0).toUpperCase()
+  const name = session?.user?.contact?.nom + " " + session?.user?.contact?.prenom
+  const user = { role: "admin", name: name, roleDisplay: session?.user?.accessType === "DEMO_GUEST" ? "DEMO GUEST" : "ADMIN", avatar: avatar }
 
   const navigation = useMemo(() => getNavigationByRole("admin"), [])
+  // const user = { role: "admin", name: session, roleDisplay: "Administrateur", avatar: "U" }\
 
   // Auto-expand sections that contain the current route
   useEffect(() => {

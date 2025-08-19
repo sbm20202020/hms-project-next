@@ -26,29 +26,27 @@ export const authOptions = {
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email
+          },
+          include: {
+            contact: true
           }
         })
 
         if (!user || !user.password) {
           return null
         }
-        console.log("user------>", user)
-        console.log("credentials------>", credentials.password)
-        console.log("user.password------>", user.password)
-
 
         const isPasswordValid = await compare(credentials.password, user.password)
-        console.log("isPasswordValid------>", isPasswordValid)
 
         if (!isPasswordValid) {
           return null
         }
 
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
+          ...user,
+          accessType: user.accessType,
+          contactId: user.contactId,
+          contact: user.contact
         }
       }
     })
@@ -63,9 +61,13 @@ export const authOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        console.log("user cb ------->", user)
         return {
           ...token,
-          id: user.id
+          id: user.id,
+          accessType: user.accessType,
+          contactId: user.contactId,
+          contact: user.contact
         }
       }
       return token
@@ -75,7 +77,10 @@ export const authOptions = {
         ...session,
         user: {
           ...session.user,
-          id: token.id
+          id: token.id,
+          accessType: token.accessType,
+          contactId: token.contactId,
+          contact: token.contact
         }
       }
     },
