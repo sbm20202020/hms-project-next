@@ -2,8 +2,8 @@ import './globals.css'
 import AuthProvider from '../components/AuthProvider'
 
 export const metadata = {
-  title: 'My App with Auth',
-  description: 'Complete authentication system with NextAuth.js v4',
+  title: 'Congo HMS',
+  description: 'Complete HMS system',
 }
 
 export default function RootLayout({ children }) {
