@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Home, Heart, Eye, EyeOff, Mail, Lock, ArrowRight, Shield, Users, Activity } from 'lucide-react';
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link';
+import { showErrorNotification, showSuccessNotification } from '@/utils/helpers';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -13,7 +14,19 @@ const LoginPage = () => {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const params = useParams()
+  const searchParams = useSearchParams()
 
+  useEffect(() => {
+    const message = searchParams.get('message',null)
+    if (message) {
+      showSuccessNotification(message)
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete("message") // supprime le paramètre
+      router.replace(`?${params.toString()}`)
+    }
+  }, [searchParams])
+  
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
@@ -26,7 +39,11 @@ const LoginPage = () => {
     })
 
     if (result?.error) {
-      setError(result.error)
+      if(result.error === "CredentialsSignin" || result.status === 401){
+        showErrorNotification("Email ou mot de passe incorrect...")
+      }else{
+        showErrorNotification("Une erreur est survenue lors de la connexion")
+      }
       setIsLoading(false)
     } else {
       router.push('/dashboard')

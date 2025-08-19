@@ -7,17 +7,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link';
 import { userAuthService } from '@/services/dossierService'
 import { showToast } from 'nextjs-toast-notify';
+import { showErrorNotification } from '@/utils/helpers';
 
-const showErrorNotification = (message) => {
-  showToast.error(message, {
-        duration: 4000,
-        progress: false,
-        position: "top-right",
-        transition: "popUp",
-        icon: '',
-        sound: true,
-      });
-}
+
 
 
 
@@ -36,6 +28,7 @@ export default function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log("----------------------------->")
     setIsLoading(true)
     setError('')
 
@@ -303,10 +296,10 @@ export default function SignUp() {
                     Traitement de votre demande...
                   </div>
                 ) : (
-                  <Link href="/auth/signup" className="flex items-center">
+                  <div className="flex items-center">
                     Demander l'accès démo
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Link>
+                  </div>
                 )}
               </button>
             </div>

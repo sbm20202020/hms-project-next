@@ -1,3 +1,4 @@
+import { showToast } from "nextjs-toast-notify";
 
 export const calculerAge = (dateNaissance) => {
   const aujourdHui = new Date();
@@ -108,4 +109,26 @@ export function getPairMonth(month){
   const endMonthUTC = new Date(Date.UTC(year, month, 1));
 
   return ({startMonthUTC,endMonthUTC})
+}
+
+export const showErrorNotification = (message) => {
+  showToast.error(message, {
+        duration: 4000,
+        progress: false,
+        position: "top-right",
+        transition: "popUp",
+        icon: '',
+        sound: true,
+      });
+}
+
+export const showSuccessNotification = (message,sound = false) => {
+  showToast.success(message, {
+        duration: 4000,
+        progress: false,
+        position: "top-right",
+        transition: "popUp",
+        icon: '',
+        sound,
+      });
 }

@@ -160,10 +160,11 @@ export default function ReceptionPage() {
   const filteredPatientsForSearch = patientsEnAttente.filter((patient) => {
     if (!patientSearchTerm) return []
     const searchLower = patientSearchTerm.toLowerCase()
+    console.log("patient--->", patient.contactId, patient.contact?.nom, patient.contact?.prenom)
     return (
-      patient.contact?.nom.toLowerCase().includes(searchLower) ||
-      patient.contact?.prenom.toLowerCase().includes(searchLower) ||
-      patient.contact?.telephone.includes(patientSearchTerm) ||
+      patient.contact?.nom?.toLowerCase().includes(searchLower) ||
+      patient.contact?.prenom?.toLowerCase().includes(searchLower) ||
+      patient.contact?.telephone?.includes(patientSearchTerm) ||
       patient.id.toString().includes(patientSearchTerm)
     )
 
@@ -174,9 +175,9 @@ export default function ReceptionPage() {
     const searchLower = dossierPatientSearchTerm.toLowerCase()
     return (
       dossierPatient?.code?.toLowerCase().includes(searchLower) ||
-      dossierPatient?.patient?.contact?.prenom.toLowerCase().includes(searchLower) ||
-      dossierPatient?.patient?.contact?.nom.toLowerCase().includes(searchLower) ||
-      dossierPatient?.patient?.contact?.telephone.includes(searchLower) ||
+      dossierPatient?.patient?.contact?.prenom?.toLowerCase().includes(searchLower) ||
+      dossierPatient?.patient?.contact?.nom?.toLowerCase().includes(searchLower) ||
+      dossierPatient?.patient?.contact?.telephone?.includes(searchLower) ||
       dossierPatient?.niveauUrgence?.toString().includes(searchLower)
     )
   })
