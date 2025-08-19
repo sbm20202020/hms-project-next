@@ -56,7 +56,7 @@ export default function QuickActions() {
       title: "Patient Complet",
       description: "Dossier patient avec tous les détails",
       icon: Users,
-      href: "/patients/new",
+      href: "/dashboard/patients/new",
     },
     {
       title: "Médecin Complet",

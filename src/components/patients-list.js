@@ -114,12 +114,12 @@ export default function PatientsList() {
                   <Badge className={statusColors[patient.status]}>{patient.status}</Badge>
                   <div className="flex space-x-2">
                     <Button variant="ghost" size="sm" asChild>
-                      <a href={`/patients/${patient.id}`}>
+                      <a href={`/dashboard/patients/${patient.id}`}>
                         <Eye className="h-4 w-4" />
                       </a>
                     </Button>
                     <Button variant="ghost" size="sm" asChild>
-                      <a href={`/patients/${patient.id}/edit`}>
+                      <a href={`/dashboard/patients/${patient.id}/edit`}>
                         <Edit className="h-4 w-4" />
                       </a>
                     </Button>

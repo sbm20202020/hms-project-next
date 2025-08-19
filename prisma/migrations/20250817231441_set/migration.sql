@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "public"."Patient" ALTER COLUMN "nom" DROP NOT NULL,
-ALTER COLUMN "prenom" DROP NOT NULL,
-ALTER COLUMN "dateNaissance" DROP NOT NULL,
-ALTER COLUMN "age" DROP NOT NULL;

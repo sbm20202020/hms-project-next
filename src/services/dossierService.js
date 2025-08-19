@@ -32,4 +32,10 @@ export const ticketService = {
   update: (id, ticket) => api.put(`/hospital/tickets/${id}`, ticket),
 }
 
+export const userAuthService = {
+  create: (user) => api.post("/auth/signup", user),
+  getAll: () => api.get("/auth/users"),
+  getById: (id) => api.get(`/auth/users/${id}`),
+}
+
 

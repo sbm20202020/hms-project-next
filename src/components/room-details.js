@@ -191,7 +191,7 @@ export default function RoomDetails({ roomId }) {
               </div>
             </div>
             <Button variant="outline" size="sm" className="mt-4 bg-transparent" asChild>
-              <a href={`/patients/${room.patient.id}`}>Voir le dossier patient</a>
+              <a href={`/dashboard/patients/${room.patient.id}`}>Voir le dossier patient</a>
             </Button>
           </CardContent>
         </Card>

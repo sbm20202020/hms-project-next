@@ -164,7 +164,7 @@ export default function AppointmentDetails({ appointmentId }) {
               <span>{appointment.patient.email}</span>
             </div>
             <Button variant="outline" size="sm" asChild>
-              <a href={`/patients/${appointment.patient.id}`}>Voir le dossier patient</a>
+              <a href={`/dashboard/patients/${appointment.patient.id}`}>Voir le dossier patient</a>
             </Button>
           </CardContent>
         </Card>

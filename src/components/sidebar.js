@@ -33,6 +33,8 @@ import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { useState, useEffect, useMemo } from "react"
 
+import { signIn, signOut, useSession } from "next-auth/react";
+
 const getNavigationByRole = (role) => {
   const baseNavigation = [{ name: "Tableau de Bord", href: "/", icon: Home }]
 
@@ -54,7 +56,7 @@ const getNavigationByRole = (role) => {
           name: "Gestion Médicale",
           icon: Users,
           children: [
-            { name: "Patients", href: "/patients", icon: Users },
+            { name: "Patients", href: "/dashboard/patients", icon: Users },
             { name: "Médecins", href: "/doctors", icon: UserCheck },
             { name: "Rendez-vous", href: "/appointments", icon: Calendar },
           ],
@@ -113,7 +115,7 @@ const getNavigationByRole = (role) => {
     case "doctor":
       return [
         ...baseNavigation,
-        { name: "Mes Patients", href: "/patients", icon: Users },
+        { name: "Mes Patients", href: "/dashboard/patients", icon: Users },
         { name: "Consultations", href: "/consultations", icon: Stethoscope },
         { name: "Prescriptions", href: "/prescriptions", icon: FileText },
         { name: "Examens", href: "/examens", icon: TestTube },
@@ -147,7 +149,7 @@ const getNavigationByRole = (role) => {
       return [
         ...baseNavigation,
         { name: "Infirmerie", href: "/infirmerie", icon: Stethoscope },
-        { name: "Patients", href: "/patients", icon: Users },
+        { name: "Patients", href: "/dashboard/patients", icon: Users },
         { name: "Soins", href: "/soins", icon: Activity },
         {
           name: "Hospitalisation",
@@ -187,7 +189,13 @@ export default function Sidebar({ open, setOpen }) {
   const pathname = usePathname()
   const [expandedSections, setExpandedSections] = useState({})
   // Default to admin role since auth is removed
-  const user = { role: "admin", name: "Utilisateur", roleDisplay: "Administrateur", avatar: "U" }
+  // const { data: session } = useSession();
+
+  // console.log(session);
+  // const user = { role: "admin", name: "Utilisateur", roleDisplay: "Administrateur", avatar: "U" }
+  // const user = { role: "admin", name: session, roleDisplay: "Administrateur", avatar: "U" }\
+  const { data: session } = useSession();
+  const user = { role: "admin", name: session?.user?.name, roleDisplay: "Administrateur", avatar: "U" }
 
   const navigation = useMemo(() => getNavigationByRole("admin"), [])
 
@@ -222,6 +230,7 @@ export default function Sidebar({ open, setOpen }) {
 
   const handleLogout = () => {
     // Logout functionality removed - no action needed
+    signOut()
   }
 
   const isActive = (href) => {

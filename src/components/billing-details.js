@@ -247,7 +247,7 @@ export default function BillingDetails({ billingId }) {
                   <p className="text-sm">{billing.patient.adresse}</p>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                  <a href={`/patients/${billing.patient.id}`}>Voir le dossier patient</a>
+                  <a href={`/dashboard/patients/${billing.patient.id}`}>Voir le dossier patient</a>
                 </Button>
               </CardContent>
             </Card>
