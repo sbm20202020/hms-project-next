@@ -7,12 +7,14 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link';
 import { showErrorNotification, showSuccessNotification } from '@/utils/helpers';
 import React from 'react'
+import { validateSignin } from '@/lib/validation/auth'
 const LoginPage = ({searchParams}) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' })
   const router = useRouter()
   // const searchParams = useSearchParams()
 
@@ -41,6 +43,23 @@ const LoginPage = ({searchParams}) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+    setFieldErrors({ email: '', password: '' })
+
+    // Validation Zod partagée
+    const validated = validateSignin({ email, password })
+    if (!validated.success) {
+      const errs = validated.errors || {}
+      setFieldErrors({
+        email: errs.email || '',
+        password: errs.password || ''
+      })
+      // Message global si aucune erreur de champ spécifique
+      if (!errs.email && !errs.password) {
+        showErrorNotification('Certains champs sont invalides.')
+      }
+      setIsLoading(false)
+      return
+    }
 
     const result = await signIn('credentials', {
       email,
@@ -64,36 +83,36 @@ const LoginPage = ({searchParams}) => {
       <div className="relative min-h-screen bg-gradient-to-br from-teal-50 to-white flex">
         <Link
           href="/"
-          className="absolute top-4 left-4 z-20 inline-flex items-center px-3 py-1.5 rounded-md text-teal-700 bg-white shadow hover:bg-teal-50 border border-teal-100"
+          className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 inline-flex items-center px-2.5 sm:px-3 py-1.5 rounded-md text-teal-700 bg-white shadow hover:bg-teal-50 border border-teal-100"
         >
           <Home className="w-4 h-4 mr-2" />
           {/* Accueil */}
         </Link>
         {/* Section gauche - Formulaire de connexion */}
         <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-          <div className="max-w-md w-full space-y-8">
+          <div className="max-w-md w-full space-y-6 sm:space-y-8">
             {/* Logo et titre */}
             <div className="text-center">
-              <div className="inline-flex items-center space-x-3 mb-8">
-                <div className="flex items-center justify-center w-12 h-12 bg-teal-600 rounded-lg">
-                  <Heart className="w-7 h-7 text-white" />
+              <div className="inline-flex items-center space-x-3 mb-6 sm:mb-8">
+                <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-teal-600 rounded-lg">
+                  <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
                 <div className="text-left">
-                  <h1 className="text-2xl font-bold text-gray-900">CongoHMS</h1>
-                  <p className="text-sm text-teal-600">Hospital Management System</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900">CongoHMS</h1>
+                  <p className="text-xs sm:text-sm text-teal-600">Hospital Management System</p>
                 </div>
               </div>
               
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                 Bon retour !
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Connectez-vous à votre compte pour accéder au système
               </p>
             </div>
 
             {/* Formulaire */}
-            <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <form className="mt-6 sm:mt-8 space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-4">
                 {/* Email */}
                 <div>
@@ -101,7 +120,7 @@ const LoginPage = ({searchParams}) => {
                     Adresse email
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
                       <Mail className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
@@ -109,13 +128,34 @@ const LoginPage = ({searchParams}) => {
                       name="email"
                       type="email"
                       autoComplete="email"
+                      inputMode="email"
+                      pattern="[^\s@]+@[^\s@]+\.[^\s@]+"
+                      title="Veuillez saisir une adresse email valide"
+                      aria-invalid={fieldErrors.email ? 'true' : 'false'}
+                      aria-describedby={fieldErrors.email ? 'email-error' : 'email-help'}
                       required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setEmail(v)
+                        if (fieldErrors.email) {
+                          const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+                          if (ok) setFieldErrors(prev => ({ ...prev, email: '' }))
+                        }
+                      }}
+                      className="block w-full h-11 sm:h-12 pl-10 pr-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                       placeholder="votre@email.com"
                     />
                   </div>
+                  {fieldErrors.email ? (
+                    <p id="email-error" className="mt-1 text-sm text-red-600" role="alert">
+                      {fieldErrors.email}
+                    </p>
+                  ) : (
+                    <p id="email-help" className="mt-1 text-xs text-gray-500">
+                      Utilisez votre email professionnel.
+                    </p>
+                  )}
                 </div>
 
                 {/* Mot de passe */}
@@ -124,7 +164,7 @@ const LoginPage = ({searchParams}) => {
                     Mot de passe
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
                       <Lock className="h-5 w-5 text-gray-400" />
                     </div>
                     <input
@@ -132,10 +172,19 @@ const LoginPage = ({searchParams}) => {
                       name="password"
                       type={showPassword ? 'text' : 'password'}
                       autoComplete="current-password"
+                      minLength={8}
+                      aria-invalid={fieldErrors.password ? 'true' : 'false'}
+                      aria-describedby={fieldErrors.password ? 'password-error' : 'password-help'}
                       required
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                      onChange={(e) => {
+                        const v = e.target.value
+                        setPassword(v)
+                        if (fieldErrors.password && v.length >= 8) {
+                          setFieldErrors(prev => ({ ...prev, password: '' }))
+                        }
+                      }}
+                      className="block w-full h-11 sm:h-12 pl-10 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                       placeholder="••••••••"
                     />
                     <button
@@ -150,11 +199,20 @@ const LoginPage = ({searchParams}) => {
                       )}
                     </button>
                   </div>
+                  {fieldErrors.password ? (
+                    <p id="password-error" className="mt-1 text-sm text-red-600" role="alert">
+                      {fieldErrors.password}
+                    </p>
+                  ) : (
+                    <p id="password-help" className="mt-1 text-xs text-gray-500">
+                      Au moins 8 caractères. Ajoutez chiffres et symboles pour plus de sécurité.
+                    </p>
+                  )}
                 </div>
               </div>
 
               {/* Options */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center">
                   <input
                     id="remember-me"
@@ -179,7 +237,7 @@ const LoginPage = ({searchParams}) => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="group relative w-full flex justify-center py-3 sm:py-3.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <div className="flex items-center">
@@ -207,12 +265,13 @@ const LoginPage = ({searchParams}) => {
             </form>
 
             {/* Informations de sécurité */}
-            <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+            <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center text-sm text-gray-600">
                 <Shield className="w-4 h-4 text-teal-600 mr-2" />
                 Connexion sécurisée avec chiffrement SSL
               </div>
             </div>
+
           </div>
         </div>
 
