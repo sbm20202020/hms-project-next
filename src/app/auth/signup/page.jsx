@@ -28,7 +28,6 @@ export default function SignUp() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("----------------------------->")
     setIsLoading(true)
     setError('')
 
@@ -67,7 +66,7 @@ export default function SignUp() {
         className="absolute top-4 left-4 z-20 inline-flex items-center px-3 py-1.5 rounded-md text-teal-700 bg-white shadow hover:bg-teal-50 border border-teal-100"
       >
         <Home className="w-4 h-4 mr-2" />
-        Accueil
+        {/* Accueil */}
       </Link>
       {/* Section gauche - Formulaire de création de compte */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
