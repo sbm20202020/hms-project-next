@@ -1,4 +1,5 @@
-import React from 'react';
+'use client';
+import React, { useState } from 'react';
 import { 
   Heart, 
   Users, 
@@ -16,7 +17,9 @@ import {
   Award,
   Stethoscope,
   Ambulance,
-  Building2
+  Building2,
+  Menu,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -76,12 +79,14 @@ const Home = () => {
     }
   ];
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16 relative">
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-10 h-10 bg-teal-600 rounded-lg">
                 <Heart className="w-6 h-6 text-white" />
@@ -91,6 +96,7 @@ const Home = () => {
                 <p className="text-sm text-teal-600">Hospital Management System</p>
               </div>
             </div>
+            {/* Desktop nav */}
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-teal-600 transition-colors">Fonctionnalités</a>
               <a href="#about" className="text-gray-600 hover:text-teal-600 transition-colors">À Propos</a>
@@ -99,6 +105,29 @@ const Home = () => {
                 Se connecter
               </Link>
             </nav>
+            {/* Mobile toggle button */}
+            <button
+              type="button"
+              aria-label="Ouvrir le menu"
+              aria-expanded={mobileOpen}
+              className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-teal-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              onClick={() => setMobileOpen((v) => !v)}
+            >
+              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+          {/* Mobile dropdown */}
+          <div className={`${mobileOpen ? 'block' : 'hidden'} md:hidden`}> 
+            <div className="bg-white border-t border-gray-100 shadow-md">
+              <div className="px-4 py-3 space-y-2">
+                <a href="#features" className="block text-gray-700 hover:text-teal-600 py-2" onClick={() => setMobileOpen(false)}>Fonctionnalités</a>
+                <a href="#about" className="block text-gray-700 hover:text-teal-600 py-2" onClick={() => setMobileOpen(false)}>À Propos</a>
+                <a href="#contact" className="block text-gray-700 hover:text-teal-600 py-2" onClick={() => setMobileOpen(false)}>Contact</a>
+                <Link href="/auth/signin" className="block bg-teal-600 text-white text-center px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors mt-2" onClick={() => setMobileOpen(false)}>
+                  Se connecter
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </header>

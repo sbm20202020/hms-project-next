@@ -190,7 +190,7 @@ export default function Sidebar({ open, setOpen }) {
   const [expandedSections, setExpandedSections] = useState({})
   const { data: session } = useSession();
 
-  // console.log("session------->", session)
+  console.log("session------->", session)
   const avatar = session?.user?.contact?.nom.charAt(0).toUpperCase()+session?.user?.contact?.prenom.charAt(0).toUpperCase()
   const name = session?.user?.contact?.nom + " " + session?.user?.contact?.prenom
   const user = { role: "admin", name: name, roleDisplay: session?.user?.accessType === "DEMO_GUEST" ? "DEMO GUEST" : "ADMIN", avatar: avatar }

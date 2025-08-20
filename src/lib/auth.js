@@ -19,7 +19,6 @@ export const authOptions = {
         password: { label: 'Password', type: 'password' }
       },
       async authorize(credentials) {
-        console.log("credentials->",credentials)
         if (!credentials?.email || !credentials?.password) {
           return null
         }
@@ -37,10 +36,7 @@ export const authOptions = {
           return null
         }
 
-        console.log("user->",user)
-
         const isPasswordValid = await compare(credentials.password, user.password)
-        console.log("isPasswordValid->",isPasswordValid)
 
         if (!isPasswordValid) {
           return null
