@@ -189,8 +189,6 @@ export default function Sidebar({ open, setOpen }) {
   const pathname = usePathname()
   const [expandedSections, setExpandedSections] = useState({})
   const { data: session } = useSession();
-
-  console.log("session------->", session)
   
   const avatar = session?.user?.contact?.nom.charAt(0).toUpperCase()+session?.user?.contact?.prenom.charAt(0).toUpperCase()
   const name = session?.user?.contact?.nom + " " + session?.user?.contact?.prenom
