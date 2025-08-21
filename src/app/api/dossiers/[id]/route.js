@@ -18,13 +18,13 @@ export async function PUT(request, { params }) {
 
     const updatedPatient = await prisma.patient.update({
       where: { id: result.patientId },
-      data: { derniereVisite: result.dateCreation },
+      data: { derniereVisite: result.createdAt },
     });
 
     // const dossiersToday = await prisma.dossierPatient.findMany({
     //   where: {
     //     serviceId: result.serviceId,
-    //     dateCreation: {
+    //     createdAt: {
     //       gte: new Date(new Date().setHours(0, 0, 0, 0)),
     //       lt: new Date(new Date().setHours(23, 59, 59, 999)),
     //     },
@@ -40,7 +40,7 @@ export async function PUT(request, { params }) {
         code: {
           startsWith: codeServiceSliced,
         },
-        dateCreation: {
+        createdAt: {
           gte: new Date(new Date().setHours(0, 0, 0, 0)),
           lt: new Date(new Date().setHours(23, 59, 59, 999)),
         },

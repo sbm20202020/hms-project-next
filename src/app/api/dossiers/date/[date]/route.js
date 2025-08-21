@@ -11,7 +11,7 @@ export async function GET(req, { params }) {
     console.log("end", end)
     const dossiers = await prisma.dossierPatient.findMany({
         where: {
-            dateCreation: {
+            createdAt: {
                 gte: start,
                 lte: end,
             },

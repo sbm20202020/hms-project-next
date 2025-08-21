@@ -49,7 +49,7 @@ export default function PatientForm({ patient = null, isEdit = false, onSuccess 
       ville: formData.ville,
       typePatient: formData.typePatient === "insured" ? "insured" : "private",
       convention: formData.convention === "none" ? null : formData.convention,
-      dateCreation: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       statut: "Actif",
       service: "",
       medecinTraitant: "",

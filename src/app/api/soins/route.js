@@ -7,6 +7,9 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  // const session = await getServerSession(authOptions);
+  // const sessionOrganisationId = session.user.organisationId;
+
   try {
     const newSoin = await request.json()
 

@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { calculerAge } from "@/utils/helpers";
+import { getSession } from "next-auth/react";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 // Schéma de validation avec Zod
 const patientSchema = z.object({
@@ -16,7 +19,7 @@ const patientSchema = z.object({
   adresse: z.string().optional(),
   ville: z.string().optional(),
   convention: z.string().nullable().optional(),
-  dateCreation: z.string().optional(),
+  createdAt: z.string().optional(),
   statut: z.string().optional(),
   service: z.string().optional(),
   medecinTraitant: z.string().optional(),
@@ -34,7 +37,14 @@ const patientSchema = z.object({
 
 // Récupération de tous les patients
 export async function GET(request) {
-  const patients = await prisma.patient.findMany({include: {
+  const session = await getServerSession(authOptions);
+  const sessionOrganisationId = session.user.organisationId;
+
+  const patients = await prisma.patient.findMany({
+    where: {
+      organisationId: sessionOrganisationId
+    },
+    include: {
     contact: {
       select: {
         nom: true,
@@ -57,6 +67,9 @@ export async function GET(request) {
 // Création d'un nouveau patient
 export async function POST(request) {
   try {
+    const session = await getServerSession(authOptions);
+    const sessionOrganisationId = session.user.organisationId;
+
     const body = await request.json();
     const validation = patientSchema.parse(body);
 
@@ -75,6 +88,7 @@ export async function POST(request) {
       email: validation.email,
       dateNaissance: new Date(validation.dateNaissance),
       age: calculerAge(validation.dateNaissance),
+      organisationId: sessionOrganisationId,
     };
     
     const contact = await prisma.contact.create({
@@ -95,6 +109,7 @@ export async function POST(request) {
       antecedents: validation.antecedents,
       traitements: validation.traitements,
       contactId: contact.id,
+      organisationId: sessionOrganisationId,
     };
 
     const patient = await prisma.patient.create({data: patientData});

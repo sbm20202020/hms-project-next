@@ -9,7 +9,7 @@ export async function GET() {
         nom: true,
         description: true,
         statut: true,
-        dateCreation: true,
+        createdAt: true,
         code: true,
       }
     }

@@ -12,7 +12,7 @@ export async function GET() {
 
     const countDossiersThisMonth = await prisma.dossierPatient.count({
         where: {
-          dateCreation: {
+          createdAt: {
             gte: currentMonthPair.startMonthUTC,
             lt: currentMonthPair.endMonthUTC,
           },
@@ -21,7 +21,7 @@ export async function GET() {
 
     const countDossiersPastMonth = await prisma.dossierPatient.count({
         where: {
-          dateCreation: {
+          createdAt: {
             gte: pastMonthPair.startMonthUTC,
             lt: pastMonthPair.endMonthUTC,
           },

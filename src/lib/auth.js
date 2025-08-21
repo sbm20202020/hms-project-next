@@ -46,7 +46,8 @@ export const authOptions = {
           ...user,
           accessType: user.accessType,
           contactId: user.contactId,
-          contact: user.contact
+          contact: user.contact,
+          organisationId: user.organisationId
         }
       }
     })
@@ -66,7 +67,8 @@ export const authOptions = {
           id: user.id,
           accessType: user.accessType,
           contactId: user.contactId,
-          contact: user.contact
+          contact: user.contact,
+          organisationId: user.organisationId
         }
       }
       return token
@@ -79,7 +81,8 @@ export const authOptions = {
           id: token.id,
           accessType: token.accessType,
           contactId: token.contactId,
-          contact: token.contact
+          contact: token.contact,
+          organisationId: token.organisationId
         }
       }
     },

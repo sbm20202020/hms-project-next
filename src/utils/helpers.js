@@ -57,7 +57,7 @@ export const variationPourcentage = (aujourdhui, hier) => {
 }
 
 export const isForToday = (dateStr) => {
-  const date = new Date(dateStr); // dateCreation
+  const date = new Date(dateStr); // createdAt
   const today = new Date();
 
   return (

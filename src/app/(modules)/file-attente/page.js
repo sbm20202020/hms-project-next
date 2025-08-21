@@ -252,7 +252,7 @@ export default function FileAttentePage() {
               {currentTicket && <div className="text-center">
                 <div className="text-4xl font-bold text-cyan-600 mb-2">{currentTicket?.code}</div>
                 <p className="text-gray-600 mb-4">{currentTicket?.dossierPatient?.service?.nom}</p>
-                <div className="text-sm text-gray-500">Créé à {getTimeInDateTime(currentTicket?.dateCreation)}</div>
+                <div className="text-sm text-gray-500">Créé à {getTimeInDateTime(currentTicket?.createdAt)}</div>
                 <div className="text-sm text-gray-500">Appelé à {getTimeInDateTime(currentTicket?.dateCalled)}</div>
               </div>}
               {!currentTicket && <div className="text-center">
@@ -281,7 +281,7 @@ export default function FileAttentePage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <Clock className="w-4 h-4 text-gray-600" />
-                      <div className="text-sm text-gray-600">{getTimeInDateTime(item.dateCreation)}</div>
+                      <div className="text-sm text-gray-600">{getTimeInDateTime(item.createdAt)}</div>
                       <Badge variant={"outline"}>
                         {item.dossierPatient.code}
                       </Badge>

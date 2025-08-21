@@ -10,7 +10,7 @@ export async function GET() {
 
     const dossiers = await prisma.dossierPatient.findMany({
         where: {
-            dateCreation: {
+            createdAt: {
                 gte: start,
                 lte: end,
             },
@@ -44,7 +44,7 @@ export async function GET() {
         //     service: true,
         // },
         // orderBy: {
-        //     dateCreation: "desc",
+        //     createdAt: "desc",
         // },
     })
     return NextResponse.json(dossiers)

@@ -37,6 +37,9 @@ export async function GET() {
 
 export async function POST(request) {
   try {
+    const session = await getServerSession(authOptions);
+    const sessionOrganisationId = session.user.organisationId;
+
     const newDossier = await request.json()
     const totalDossiers = await prisma.dossierPatient.count()
     const code = generateCode("DP", totalDossiers + 1)
@@ -44,6 +47,7 @@ export async function POST(request) {
       data: {
         ...newDossier,
         code,
+        organisationId: sessionOrganisationId,
       },
       include: {
         patient: true,
@@ -54,7 +58,7 @@ export async function POST(request) {
 
     const updatedPatient = await prisma.patient.update({
       where: { id: newDossier.patientId },
-      data: { derniereVisite: result.dateCreation },
+      data: { derniereVisite: result.createdAt },
     });
     return NextResponse.json(result, { status: 201 })
   } catch (error) {

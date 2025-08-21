@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const tickets = await prisma.ticket.findMany({
       where: {
-        dateCreation: {
+        createdAt: {
           gte: new Date(new Date().setHours(0, 0, 0, 0)),
           lt: new Date(new Date().setHours(23, 59, 59, 999)),
         },
@@ -18,7 +18,7 @@ export async function GET() {
         },
       },
       orderBy: {
-        dateCreation: "asc",
+        createdAt: "asc",
       },
     })
     return NextResponse.json(tickets)

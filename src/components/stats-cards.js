@@ -23,15 +23,15 @@ export default function StatsCards() {
 
         const patientsMoisPasse = patients.filter(patient => {
           const moisPasse = new Date().getMonth() - 1
-          const dateCreation = new Date(patient.dateCreation)
-          const moisCreation = dateCreation.getMonth()
+          const createdAt = new Date(patient.createdAt)
+          const moisCreation = createdAt.getMonth()
           return moisCreation === moisPasse
         })
 
         const patientsMoisCurrent = patients.filter(patient => {
           const moisCurrent = new Date().getMonth()
-          const dateCreation = new Date(patient.dateCreation)
-          const moisCreation = dateCreation.getMonth()
+          const createdAt = new Date(patient.createdAt)
+          const moisCreation = createdAt.getMonth()
           return moisCreation === moisCurrent
         })
 

@@ -8,17 +8,6 @@ export async function POST(request) {
   try {
     const { name, email, password, organization, position, telephone, establishmentType, isDemoRequest } = await request.json()
 
-    // console.log({
-    //   name,
-    //   email,
-    //   password,
-    //   organization,
-    //   position,
-    //   telephone,
-    //   establishmentType,
-    //   isDemoRequest
-    // })
-
     if (!email || !password || !name) {
       return NextResponse.json(
         { 
@@ -47,7 +36,49 @@ export async function POST(request) {
 
     const hashedPassword = await hash(password, 12)
 
-    if (isDemoRequest) {
+    const organisation = await prisma.organisation.create({
+      data: {
+        nom: "",
+        description: "",
+      },
+    })
+    let role;
+    let permissions;
+    let newPermissions;
+
+    if (organisation) {
+      role = await prisma.role.create({
+        data: {
+          nom: "Administrateur",
+          description: "Administrateur",
+          organisationId: organisation.id,
+        },
+      })
+
+      console.log("role", role)
+  
+      permissions = await prisma.permission.findMany({
+        where: {
+          organisationId: 1,
+        },
+      })
+  
+      newPermissions = await prisma.permission.createMany({
+        data: permissions.map((permission) => ({
+          name: permission.name,
+          fonctionId: permission.fonctionId,
+          organisationId: organisation.id,
+          canCreate: permission.canCreate,
+          canRead: permission.canRead,
+          canUpdate: permission.canUpdate,
+          canDelete: permission.canDelete,
+        })),
+      })
+    }
+
+
+    if (isDemoRequest || organisation.id || role.id || newPermissions.length > 0) {
+
       const contact = await prisma.contact.create({
         data: {
           nom: name.split(" ")[0],
@@ -58,6 +89,7 @@ export async function POST(request) {
           position,
           establishmentType,
           isDemoRequest,
+          organisationId: organisation.id,
         },
       })
 
@@ -66,6 +98,8 @@ export async function POST(request) {
           email,
           password: hashedPassword,
           contactId: contact.id,
+          organisationId: organisation.id,
+          roleId: role.id,
         },
       })
 
@@ -77,7 +111,6 @@ export async function POST(request) {
         { status: 201 }
       )
     } else {
-
       const contact = await prisma.contact.create({
         data: {
           nom: name.split(" ")[0],
@@ -88,6 +121,7 @@ export async function POST(request) {
           position,
           establishmentType,
           isDemoRequest,
+          organisationId: organisation.id,
         },
       })
       const user = await prisma.user.create({
@@ -95,6 +129,8 @@ export async function POST(request) {
           email,
           password: hashedPassword,
           contactId: contact.id,
+          organisationId: organisation.id,
+          roleId: role.id,
         },
       })
 
