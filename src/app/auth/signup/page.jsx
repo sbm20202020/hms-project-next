@@ -9,6 +9,7 @@ import { userAuthService } from '@/services/dossierService'
 import { showToast } from 'nextjs-toast-notify';
 import { showErrorNotification } from '@/utils/helpers';
 import { validateSignup } from '@/lib/validation/auth'
+import { SignInfos } from '@/components/signinfos';
 
 
 
@@ -120,11 +121,11 @@ export default function SignUp() {
       </Link>
 
       {/* Section gauche - Formulaire de création de compte */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-6 sm:space-y-8">
+      <div className="flex-1 flex items-start justify-center px-3 sm:px-5 lg:px-7 py-8 lg:py-10">
+        <div className="w-full max-w-full sm:max-w-lg md:max-w-xl lg:max-w-2xl space-y-4 sm:space-y-5">
           {/* Logo et titre */}
-          <div className="text-center">
-            <div className="inline-flex items-center space-x-3 mb-6 sm:mb-8">
+          <div className="text-center mt-0">
+            <Link href="/" className="inline-flex items-center space-x-3 mb-4 sm:mb-5">
               <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-teal-600 rounded-lg">
                 <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
               </div>
@@ -132,24 +133,24 @@ export default function SignUp() {
                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">CongoHMS</h1>
                 <p className="text-xs sm:text-sm text-teal-600">Hospital Management System</p>
               </div>
-            </div>
+            </Link>
             
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 leading-snug tracking-tight mb-0 max-w-sm mx-auto">
               Demande d'accès démo
             </h2>
-            <p className="text-gray-600 text-sm sm:text-base">
+            <p className="text-gray-600 text-[13px] sm:text-sm leading-snug max-w-sm mx-auto">
               Testez CongoHMS gratuitement avec un accès démo complet
             </p>
           </div>
 
           {/* Formulaire */}
-          <form className="mt-6 sm:mt-8 space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
-            <div className="space-y-5 sm:space-y-6">
+          <form className="mt-3 sm:mt-4 space-y-3 sm:space-y-4" onSubmit={handleSubmit}>
+            <div className="space-y-3 sm:space-y-4">
               {/* Première ligne - Nom et Email */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Nom */}
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Nom
                   </label>
                   <div className="relative">
@@ -164,7 +165,7 @@ export default function SignUp() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="block w-full h-11 sm:h-12 pl-10 pr-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                      className="block w-full h-11 sm:h-12 pl-10 pr-3 border border-gray-300 rounded-md bg-white placeholder-gray-400 text-[16px] sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                       placeholder="Ex: Jean Ngandu"
                     />
                   </div>
@@ -172,7 +173,7 @@ export default function SignUp() {
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Adresse email
                   </label>
                   <div className="relative">
@@ -199,7 +200,7 @@ export default function SignUp() {
                           if (ok) setFieldErrors(prev => ({ ...prev, email: '' }))
                         }
                       }}
-                      className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                      className="block w-full h-11 sm:h-12 pl-10 pr-3 border border-gray-300 rounded-md bg-white placeholder-gray-400 text-[16px] sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                       placeholder="exemple@domaine.com"
                     />
                   </div>
@@ -219,7 +220,7 @@ export default function SignUp() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Organisation */}
                 <div>
-                  <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Organisation / Hôpital
                   </label>
                   <div className="relative">
@@ -234,7 +235,7 @@ export default function SignUp() {
                       required
                       value={organization}
                       onChange={(e) => setOrganization(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                      className="block w-full h-11 sm:h-12 pl-10 pr-3 border border-gray-300 rounded-md bg-white placeholder-gray-400 text-[16px] sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                       placeholder="Ex: Hôpital Central de Kinshasa"
                     />
                   </div>
@@ -242,7 +243,7 @@ export default function SignUp() {
 
                 {/* Poste */}
                 <div>
-                  <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="position" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Poste / Fonction
                   </label>
                   <div className="relative">
@@ -257,7 +258,7 @@ export default function SignUp() {
                       required
                       value={position}
                       onChange={(e) => setPosition(e.target.value)}
-                      className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                      className="block w-full h-11 sm:h-12 pl-10 pr-3 border border-gray-300 rounded-md bg-white placeholder-gray-400 text-[16px] sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                       placeholder="Ex: Médecin Chef, Administrateur, Infirmier"
                     />
                   </div>
@@ -268,7 +269,7 @@ export default function SignUp() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Téléphone */}
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Numéro de téléphone
                   </label>
                   <div className="relative">
@@ -295,7 +296,7 @@ export default function SignUp() {
                           if (ok) setFieldErrors({ phone: '' })
                         }
                       }}
-                      className="block w-full pl-10 pr-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                      className="block w-full h-11 sm:h-12 pl-10 pr-3 border border-gray-300 rounded-md bg-white placeholder-gray-400 text-[16px] sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                       placeholder="Ex: +243 900 000 000"
                     />
                   </div>
@@ -308,7 +309,7 @@ export default function SignUp() {
 
                 {/* Type d'établissement */}
                 <div>
-                  <label htmlFor="establishmentType" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="establishmentType" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Type d'établissement
                   </label>
                   <div className="relative">
@@ -321,7 +322,7 @@ export default function SignUp() {
                       required
                       value={establishmentType}
                       onChange={(e) => setEstablishmentType(e.target.value)}
-                      className="block w-full h-11 sm:h-12 appearance-none pl-10 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors bg-white text-gray-900"
+                      className="block w-full h-11 sm:h-12 appearance-none pl-10 pr-10 border border-gray-300 rounded-md bg-white text-[16px] sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors text-gray-900"
                     >
                       <option value="">Sélectionnez le type d'établissement</option>
                       <option value="hopital-public">Hôpital public</option>
@@ -340,11 +341,11 @@ export default function SignUp() {
 
               {/* Mot de passe - pleine largeur */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Mot de passe
                 </label>
                 <div className="relative">
-                  <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
                     <Lock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
@@ -356,9 +357,9 @@ export default function SignUp() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full h-11 sm:h-12 pl-10 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                    className="block w-full h-11 sm:h-12 pl-10 pr-12 border border-gray-300 rounded-md bg-white placeholder-gray-400 text-[16px] sm:text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                     placeholder="Au moins 8 caractères"
-                    aria-describedby="password-help"
+                    aria-describedby={password && password.length > 0 ? 'password-help' : undefined}
                   />
                   <button
                     type="button"
@@ -372,30 +373,34 @@ export default function SignUp() {
                     )}
                   </button>
                 </div>
-                <p id="password-help" className="mt-1 text-xs text-gray-500">
-                  Au moins 8 caractères. Ajoutez chiffres et symboles pour plus de sécurité.
-                </p>
-                {/* Indicateur de force du mot de passe */}
-                <div className="mt-2" aria-live="polite">
-                  {(() => {
-                    const level = getPasswordStrength(password)
-                    const labels = ['Faible', 'Moyen', 'Fort']
-                    const colors = ['bg-red-500', 'bg-yellow-500', 'bg-green-600']
-                    return (
-                      <div>
-                        <div className="h-1.5 w-full bg-gray-200 rounded">
-                          <div className={`h-1.5 rounded ${colors[level]}`} style={{ width: `${(level + 1) * 33.33}%` }} />
-                        </div>
-                        <p className="mt-1 text-xs text-gray-600">Force du mot de passe: {labels[level]}</p>
-                      </div>
-                    )
-                  })()}
-                </div>
+                {password && password.length > 0 && (
+                  <>
+                    <p id="password-help" className="mt-1 text-xs text-gray-500">
+                      Au moins 8 caractères. Ajoutez chiffres et symboles pour plus de sécurité.
+                    </p>
+                    {/* Indicateur de force du mot de passe */}
+                    <div className="mt-2" aria-live="polite">
+                      {(() => {
+                        const level = getPasswordStrength(password)
+                        const labels = ['Faible', 'Moyen', 'Fort']
+                        const colors = ['bg-red-500', 'bg-yellow-500', 'bg-green-600']
+                        return (
+                          <div>
+                            <div className="h-1.5 w-full bg-gray-200 rounded">
+                              <div className={`h-1.5 rounded ${colors[level]}`} style={{ width: `${(level + 1) * 33.33}%` }} />
+                            </div>
+                            <p className="mt-1 text-xs text-gray-600">Force du mot de passe: {labels[level]}</p>
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Bouton de création de compte */}
-            <div>
+            <div className="mt-1">
               <button
                 type="submit"
                 disabled={isLoading}
@@ -416,7 +421,7 @@ export default function SignUp() {
             </div>
 
             {/* Lien de connexion */}
-            <div className="text-center">
+            <div className="text-center mt-1">
               <p className="text-sm text-gray-600">
                 Vous avez déjà un compte ?{' '}
                 <Link href="signin" className="text-teal-600 hover:text-teal-700 font-medium transition-colors">
@@ -427,7 +432,7 @@ export default function SignUp() {
           </form>
 
           {/* Informations de sécurité */}
-          <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-gray-50 rounded-lg">
+          <div className="mt-4 sm:mt-5 p-3 sm:p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center text-sm text-gray-600">
               <Shield className="w-4 h-4 text-teal-600 mr-2" />
               Inscription sécurisée avec chiffrement SSL
@@ -437,78 +442,7 @@ export default function SignUp() {
       </div>
 
       {/* Section droite - Informations et statistiques */}
-      <div className="hidden lg:flex lg:flex-1 bg-teal-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-600 to-teal-700"></div>
-        
-        {/* Motif décoratif */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-20 w-32 h-32 border border-white rounded-full"></div>
-          <div className="absolute top-40 right-32 w-24 h-24 border border-white rounded-full"></div>
-          <div className="absolute bottom-32 left-32 w-40 h-40 border border-white rounded-full"></div>
-        </div>
-
-        <div className="relative z-10 flex flex-col justify-center px-12 py-12 text-white">
-          <div className="max-w-md">
-            <h3 className="text-3xl font-bold mb-6">
-              Gérez votre hôpital avec efficacité
-            </h3>
-            <p className="text-teal-100 text-lg mb-8 leading-relaxed">
-              CongoHMS vous permet de centraliser la gestion de votre établissement 
-              de santé avec des outils modernes et sécurisés.
-            </p>
-
-            {/* Statistiques */}
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">10,000+</div>
-                  <div className="text-teal-100">Patients traités</div>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">99.9%</div>
-                  <div className="text-teal-100">Disponibilité système</div>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-lg flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold">100%</div>
-                  <div className="text-teal-100">Données sécurisées</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Témoignage */}
-            <div className="mt-12 p-6 bg-gray-10 bg-opacity-10 rounded-lg backdrop-blur-sm">
-              <p className="text-teal-100 italic mb-4">
-                "CongoHMS a transformé notre façon de travailler. L'interface est intuitive 
-                et nos équipes ont rapidement adopté le système."
-              </p>
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-white font-semibold text-sm">DM</span>
-                </div>
-                <div>
-                  <div className="font-semibold">Dr. Marie Kabila</div>
-                  <div className="text-teal-200 text-sm">Hôpital Central de Kinshasa</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        <SignInfos />
     </div>
   );
 }

@@ -87,7 +87,7 @@ const Home = () => {
       <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 relative">
-            <div className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-10 h-10 bg-teal-600 rounded-lg">
                 <Heart className="w-6 h-6 text-white" />
               </div>
@@ -95,7 +95,7 @@ const Home = () => {
                 <h1 className="text-xl font-bold text-gray-900">CongoHMS</h1>
                 <p className="text-sm text-teal-600">Hospital Management System</p>
               </div>
-            </div>
+            </Link>
             {/* Desktop nav */}
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#features" className="text-gray-600 hover:text-teal-600 transition-colors">Fonctionnalités</a>
