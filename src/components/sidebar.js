@@ -196,7 +196,6 @@ export default function Sidebar({ open, setOpen }) {
 
   const navigation = useMemo(() => getNavigationByRole("admin"), [])
   // const user = { role: "admin", name: session, roleDisplay: "Administrateur", avatar: "U" }\
-
   // Auto-expand sections that contain the current route
   useEffect(() => {
     if (!pathname) return
