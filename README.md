@@ -45,5 +45,5 @@ https://www.nextjstoastnotify.com
 ##Prisma SQL commands execute
 
 ```bash
-npx prisma db execute --file ./script.sql --schema schema.prisma
+npx prisma db execute --file ./seed.sql --schema schema.prisma
 ```
