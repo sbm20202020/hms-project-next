@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { generateCode } from "@/utils/helpers";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 
 export async function GET() {
   const dossiers = await prisma.dossierPatient.findMany({
@@ -32,12 +34,14 @@ export async function GET() {
   //     return { ...dossier, patient, service }
   //   })
   // )
+  
   return NextResponse.json(dossiersWithPatient)
 }
 
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
+    console.log("--------------------> Session",session)
     const sessionOrganisationId = session.user.organisationId;
 
     const newDossier = await request.json()

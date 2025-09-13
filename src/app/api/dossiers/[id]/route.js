@@ -52,6 +52,7 @@ export async function PUT(request, { params }) {
       data: {
         dossierPatientId: result.id,
         code: generateTicketCode(codeServiceSliced, lenTickets + 1),
+        organisationId: result.organisationId,
       },
     });
     return NextResponse.json(result);

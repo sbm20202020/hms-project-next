@@ -19,9 +19,13 @@ export async function POST(request) {
       )
     }
 
+    console.log("............................................. isDemoRequest", isDemoRequest)
+    console.log("............................................. Email", email)
+    
     const existingUser = await prisma.user.findUnique({
       where: { email },
     })
+    console.log("............................................. existingUser", existingUser)
 
     if (existingUser) {
       return NextResponse.json(
