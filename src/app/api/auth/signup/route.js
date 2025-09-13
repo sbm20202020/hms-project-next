@@ -81,7 +81,7 @@ export async function POST(request) {
     }
 
 
-    if (isDemoRequest || organisation.id || role.id || newPermissions.length > 0) {
+    if (isDemoRequest || (organisation?.id) || (role?.id) || ((newPermissions?.count ?? 0) > 0)) {
 
       const contact = await prisma.contact.create({
         data: {
