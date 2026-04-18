@@ -1,0 +1,78 @@
+# HMS — Docker Compose stack
+# Three services: postgres, backend (Django), frontend (Next.js)
+#
+# Usage:
+#   cp .env.example .env          # fill in secrets
+#   docker compose up --build
+#   docker compose exec backend python manage.py createsuperuser
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hms}
+      POSTGRES_USER: ${POSTGRES_USER:-hms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hms} -d ${POSTGRES_DB:-hms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hms-net
+
+  # ── Django backend ──────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    restart: unless-stopped
+    environment:
+      DJANGO_ENV: ${DJANGO_ENV:-production}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?DJANGO_SECRET_KEY is required}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,backend}
+      DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-http://localhost:3000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hms}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-hms}
+      DATABASE_SSL_REQUIRE: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    networks:
+      - hms-net
+
+  # ── Next.js frontend ────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+      args:
+        # Must match the runtime env below — Next.js rewrites() are baked at build time
+        DJANGO_API_URL: http://backend:8000
+    restart: unless-stopped
+    environment:
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required}
+      DJANGO_API_URL: http://backend:8000
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - hms-net
+
+volumes:
+  postgres_data:
+
+networks:
+  hms-net:
+    driver: bridge

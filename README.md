@@ -1,49 +1,93 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# HMS — Hospital Management System
 
-## Getting Started
+Stack : **Next.js 15** · **Django 5** · **PostgreSQL 16** · **Docker Compose**
 
-First, run the development server:
+```
+hms-project-next/
+├── frontend/          # Next.js 15 (App Router, Tailwind, next-auth)
+├── backend/           # Django 5 REST API (DRF + SimpleJWT)
+├── docker/
+│   ├── Dockerfile.frontend
+│   └── Dockerfile.backend
+├── docker-compose.yml
+└── .env.example       # Docker Compose variables
+```
+
+---
+
+## Démarrage rapide (Docker)
 
 ```bash
-npm install pnpm
+# 1. Copier et remplir les variables d'environnement
+cp .env.example .env
+
+# 2. Lancer la stack
+docker compose up --build
+
+# 3. Créer le premier superutilisateur Django (une seule fois)
+docker compose exec backend python manage.py createsuperuser
+```
+
+Accès :
+- **Frontend** → http://localhost:3000
+- **Backend API** → http://localhost:8000/api/
+- **Django Admin** → http://localhost:8000/admin/
+
+---
+
+## Développement local (sans Docker)
+
+### Backend
+
+```bash
+cd backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # éditez si nécessaire
+python manage.py migrate
+python manage.py runserver
+```
+
+### Frontend
+
+```bash
+cd frontend
+corepack enable pnpm
 pnpm install
-
-npx prisma init
-npx prisma generate
-npx prisma migrate dev
+cp .env.example .env.local   # éditez DJANGO_API_URL=http://localhost:8000
+pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Architecture
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-Prisma docs 
-https://www.prisma.io/docs/orm/overview/introduction/what-is-prisma
-
-npx prisma init
-npx prisma generate -> pnpm dlx prisma generate
-
-https://www.nextjstoastnotify.com
-
-##Prisma SQL commands execute
-
-```bash
-npx prisma db execute --file ./seed.sql --schema schema.prisma
 ```
+Browser
+  │
+  ▼
+Next.js  (port 3000)
+  │  /api/auth/* ──────────────► next-auth (JWT en session)
+  │  /api/*      ──────────────► Django API (proxy beforeFiles)
+  │
+  ▼
+Django   (port 8000)
+  │
+  ▼
+PostgreSQL (port 5432)
+```
+
+Les routes API Next.js (`src/app/api/`) ne contiennent plus que le handler `[...nextauth]`.
+Toutes les autres requêtes `/api/*` sont proxiées vers Django via `next.config.mjs`.
+
+---
+
+## Variables d'environnement
+
+| Variable | Où | Description |
+|---|---|---|
+| `POSTGRES_PASSWORD` | root `.env` | Obligatoire |
+| `DJANGO_SECRET_KEY` | root `.env` | Obligatoire en prod |
+| `NEXTAUTH_SECRET` | root `.env` | Obligatoire |
+| `NEXTAUTH_URL` | root `.env` | URL publique du frontend |
+| `DJANGO_API_URL` | `frontend/.env.local` | URL du backend (dev local) |
