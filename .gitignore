@@ -25,6 +25,9 @@
 # misc
 .DS_Store
 *.pem
+__pycache__/
+*.pyc
+backend/db.sqlite3
 
 # debug
 npm-debug.log*
@@ -34,6 +37,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
+!backend/.env.example
 
 # vercel
 .vercel
