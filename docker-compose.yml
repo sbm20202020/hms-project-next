@@ -53,6 +53,9 @@ services:
     build:
       context: ./frontend
       dockerfile: ../docker/Dockerfile.frontend
+      args:
+        # Must match the runtime env below — Next.js rewrites() are baked at build time
+        DJANGO_API_URL: http://backend:8000
     restart: unless-stopped
     environment:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}

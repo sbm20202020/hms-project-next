@@ -16,8 +16,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build-time env (overridden at runtime via docker-compose)
+# Build-time env vars
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# DJANGO_API_URL must be known at build time because Next.js rewrites() are
+# evaluated during `next build` (baked into the routes manifest).
+# The default points to the Docker service name so the image works out-of-the-box.
+ARG DJANGO_API_URL=http://backend:8000
+ENV DJANGO_API_URL=${DJANGO_API_URL}
 
 RUN pnpm build
 
