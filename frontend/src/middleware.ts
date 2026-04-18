@@ -7,8 +7,10 @@ const PUBLIC_PREFIXES = ["/auth/"]
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl
 
-  // Bypass complet pour API auth
-  if (pathname.startsWith("/api/auth")) {
+  // Bypass all /api/* routes — they are protected by Django JWT, not by
+  // Next.js session. Intercepting XHR API calls here causes redirect loops
+  // when NEXTAUTH_URL doesn't exactly match the public origin.
+  if (pathname.startsWith("/api/")) {
     return NextResponse.next()
   }
 
