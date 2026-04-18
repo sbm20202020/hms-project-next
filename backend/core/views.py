@@ -85,7 +85,7 @@ def signup(request):
     if not serializer.is_valid():
         return Response(
             {"error": str(serializer.errors), "ok": False, "trueStatus": 400},
-            status=status.HTTP_200_OK,
+            status=status.HTTP_400_BAD_REQUEST,
         )
 
     data = serializer.validated_data
@@ -98,9 +98,9 @@ def signup(request):
             {
                 "error": "Un utilisateur avec cet email existe déjà",
                 "ok": False,
-                "trueStatus": 400,
+                "trueStatus": 409,
             },
-            status=status.HTTP_200_OK,
+            status=status.HTTP_409_CONFLICT,
         )
 
     # Create organisation
@@ -375,8 +375,10 @@ def hospital_ticket_update(request, pk):
     except Ticket.DoesNotExist:
         return Response({"error": "Ticket introuvable"}, status=status.HTTP_404_NOT_FOUND)
 
-    for field, value in request.data.items():
-        setattr(ticket, field, value)
+    ALLOWED_FIELDS = {"status", "date_called", "date_done"}
+    for field in ALLOWED_FIELDS:
+        if field in request.data:
+            setattr(ticket, field, request.data[field])
     ticket.save()
     return Response(TicketSerializer(ticket).data)
 

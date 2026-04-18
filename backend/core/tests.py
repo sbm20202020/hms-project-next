@@ -35,7 +35,7 @@ class SignupTests(TestCase):
             "/api/auth/signup/", data=payload, content_type="application/json"
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 409)
         self.assertFalse(response.json().get("ok"))
 
 
