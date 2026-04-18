@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import dj_database_url
+from django.core.management.utils import get_random_secret_key
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,7 +10,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 ENVIRONMENT = os.getenv("DJANGO_ENV", "development")
 IS_PRODUCTION = ENVIRONMENT == "production"
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-insecure-key")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY") or get_random_secret_key()
+if IS_PRODUCTION and not os.getenv("DJANGO_SECRET_KEY"):
+    raise ValueError("DJANGO_SECRET_KEY must be set when DJANGO_ENV=production")
 DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true" and not IS_PRODUCTION
 ALLOWED_HOSTS = [host for host in os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host]
 CSRF_TRUSTED_ORIGINS = [
