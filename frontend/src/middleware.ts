@@ -7,8 +7,10 @@ const PUBLIC_PREFIXES = ["/auth/"]
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl
 
-  // Bypass complet pour API auth
-  if (pathname.startsWith("/api/auth")) {
+  // Bypass all /api/* routes — they are proxied to Django which handles its
+  // own JWT authentication.  Redirecting XHR requests to /auth/signin would
+  // cause ERR_TOO_MANY_REDIRECTS in the browser.
+  if (pathname.startsWith("/api/")) {
     return NextResponse.next()
   }
 
