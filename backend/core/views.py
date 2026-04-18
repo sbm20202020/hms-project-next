@@ -1,4 +1,5 @@
 import math
+from calendar import monthrange
 from datetime import datetime, timedelta, timezone
 
 from django.http import JsonResponse
@@ -60,7 +61,6 @@ def _day_range(date=None):
 
 def _pair_month(month):
     year = datetime.now().year
-    from calendar import monthrange
     _, last_day = monthrange(year, month)
     start = datetime(year, month, 1, tzinfo=timezone.utc)
     if month == 12:
@@ -334,7 +334,7 @@ def dossiers_by_date(request, date):
     try:
         d = datetime.strptime(date, "%Y-%m-%d").date()
     except ValueError:
-        return Response({"error": "Format de date invalide (attendu: YYYY-MM-DD)"}, status=400)
+        return Response({"error": "Format de date invalide (attendu: YYYY-MM-DD)"}, status=status.HTTP_400_BAD_REQUEST)
     start, end = _day_range(d)
     qs = (
         DossierPatient.objects.filter(created_at__gte=start, created_at__lte=end)
