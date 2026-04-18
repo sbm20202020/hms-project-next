@@ -30,39 +30,74 @@ class Command(BaseCommand):
             help="Supprime toutes les données existantes avant d'insérer.",
         )
 
+    def _ok(self, label, count):
+        self.stdout.write(f"  {self.style.SUCCESS('✓')} {label:<35} {self.style.SUCCESS(str(count))} enregistrement(s)")
+
     def handle(self, *args, **options):
         if options["reset"]:
             self._reset()
-            self.stdout.write(self.style.WARNING("Données existantes supprimées."))
+            self.stdout.write(self.style.WARNING("⚠  Données existantes supprimées."))
+
+        self.stdout.write(self.style.HTTP_INFO("\n══ HMS SEED DÉMO ══════════════════════════════"))
 
         org = self._organisation()
         fonctions = self._fonctions()
+        self._ok("Fonctions", len(fonctions))
         roles = self._roles(org)
+        self._ok("Rôles", len(roles))
         permissions = self._permissions(org, fonctions)
+        self._ok("Permissions", len(permissions))
         self._role_permissions(roles, permissions)
+        self._ok("RolePermissions", RolePermission.objects.filter(role__organisation=org).count())
         services = self._services(org)
+        self._ok("Services", len(services))
         contacts_staff, contacts_patients = self._contacts(org)
+        self._ok("Contacts (staff)", len(contacts_staff))
+        self._ok("Contacts (patients)", len(contacts_patients))
         employes = self._employes(org, services, contacts_staff)
-        self._users(org, roles, contacts_staff, employes)
+        self._ok("Employés", len(employes))
+        users = self._users(org, roles, contacts_staff, employes)
+        self._ok("Utilisateurs", len(users))
         patients = self._patients(org, contacts_patients)
+        self._ok("Patients", len(patients))
         dossiers = self._dossiers(org, patients, services, employes)
-        self._tickets(org, dossiers)
+        self._ok("Dossiers patients", len(dossiers))
+        tickets = self._tickets(org, dossiers)
+        self._ok("Tickets", len(tickets))
         chambres = self._chambres(org, services)
+        self._ok("Chambres", len(chambres))
         lits = self._lits(chambres)
+        self._ok("Lits", len(lits))
         admissions = self._admissions(org, patients, dossiers, lits, employes)
-        self._transferts(org, admissions, lits)
-        self._rendez_vous(org, patients, employes)
-        self._consultations(org, patients, dossiers, employes)
-        self._soins(org, patients, dossiers, employes)
-        self._examens_labo(org, patients, dossiers, employes)
-        self._examens_imagerie(org, patients, dossiers, employes)
+        self._ok("Admissions", len(admissions))
+        transferts = self._transferts(org, admissions, lits)
+        self._ok("Transferts", len(transferts))
+        rdvs = self._rendez_vous(org, patients, employes)
+        self._ok("Rendez-vous", len(rdvs))
+        consults = self._consultations(org, patients, dossiers, employes)
+        self._ok("Consultations médicales", len(consults))
+        soins = self._soins(org, patients, dossiers, employes)
+        self._ok("Soins infirmiers", len(soins))
+        exlabo = self._examens_labo(org, patients, dossiers, employes)
+        self._ok("Examens labo", len(exlabo))
+        eximg = self._examens_imagerie(org, patients, dossiers, employes)
+        self._ok("Examens imagerie", len(eximg))
         medicaments = self._medicaments(org)
+        self._ok("Médicaments", len(medicaments))
         ordonnances = self._ordonnances(org, patients, employes, medicaments)
-        self._dispensations(org, ordonnances, employes)
-        self._factures(org, patients, dossiers)
-        self._depenses(org)
-        self._logs(org)
-        self.stdout.write(self.style.SUCCESS("✔  Seed démo terminé avec succès."))
+        self._ok("Ordonnances", len(ordonnances))
+        self._ok("Lignes ordonnance", LigneOrdonnance.objects.filter(ordonnance__organisation=org).count())
+        dispensations = self._dispensations(org, ordonnances, employes)
+        self._ok("Dispensations", len(dispensations))
+        factures = self._factures(org, patients, dossiers)
+        self._ok("Factures", len(factures))
+        self._ok("Lignes facture", LigneFacture.objects.filter(facture__organisation=org).count())
+        depenses = self._depenses(org)
+        self._ok("Dépenses", len(depenses))
+        logs = self._logs(org)
+        self._ok("Logs", len(logs))
+
+        self._print_summary(org, users)
 
     # ─────────────────────────────────────────────────────────────────────────
     # Helpers
@@ -269,9 +304,10 @@ class Command(BaseCommand):
             ("c.ondo@hms-demo.ga", "Labo2024!", "PRO_ADMIN_GUEST", "Laborantin", 5, False),
             ("a.mouele@hms-demo.ga", "Radio2024!", "PRO_ADMIN_GUEST", "Radiologue", 6, False),
         ]
+        users = []
         for email, pwd, access, role_name, contact_idx, is_staff in users_data:
             if not User.objects.filter(email=email).exists():
-                User.objects.create_user(
+                u = User.objects.create_user(
                     email=email,
                     password=pwd,
                     access_type=access,
@@ -280,7 +316,10 @@ class Command(BaseCommand):
                     organisation=org,
                     is_staff=is_staff,
                 )
-        self.stdout.write("  Utilisateurs créés.")
+            else:
+                u = User.objects.get(email=email)
+            users.append(u)
+        return users
 
     def _patients(self, org, contacts_patients):
         data = [
@@ -350,11 +389,14 @@ class Command(BaseCommand):
         return dossiers
 
     def _tickets(self, org, dossiers):
+        tickets = []
         for i, dossier in enumerate(dossiers):
-            Ticket.objects.get_or_create(
+            t, _ = Ticket.objects.get_or_create(
                 code=f"TKT-2024-{i+1:03d}", organisation=org,
                 defaults={"dossier_patient": dossier, "status": "terminé" if i % 3 == 0 else "attente"},
             )
+            tickets.append(t)
+        return tickets
 
     def _chambres(self, org, services):
         data = [
@@ -415,9 +457,10 @@ class Command(BaseCommand):
         return admissions
 
     def _transferts(self, org, admissions, lits):
+        transferts = []
         libre_lits = [l for l in lits if l.statut == "Libre"]
         if admissions and len(libre_lits) >= 2:
-            Transfert.objects.get_or_create(
+            t, _ = Transfert.objects.get_or_create(
                 admission=admissions[0],
                 organisation=org,
                 defaults={
@@ -426,6 +469,8 @@ class Command(BaseCommand):
                     "motif": "Transfert vers chambre de soins intensifs.",
                 },
             )
+            transferts.append(t)
+        return transferts
 
     def _rendez_vous(self, org, patients, employes):
         today = date.today()
@@ -439,12 +484,15 @@ class Command(BaseCommand):
             (6, 0, today - timedelta(1), time(9, 30), "Consultation", "Terminé", 30),
             (7, 1, today - timedelta(2), time(15, 0), "Suivi", "Terminé", 45),
         ]
+        rdvs = []
         for p_idx, e_idx, d, h, typ, statut, duree in rdv_data:
-            RendezVous.objects.get_or_create(
+            r, _ = RendezVous.objects.get_or_create(
                 patient=patients[p_idx], medecin=employes[e_idx],
                 date=d, heure=h, organisation=org,
                 defaults={"type": typ, "statut": statut, "duree": duree},
             )
+            rdvs.append(r)
+        return rdvs
 
     def _consultations(self, org, patients, dossiers, employes):
         data = [
@@ -457,8 +505,9 @@ class Command(BaseCommand):
             (3, 1, 3, "Dyspnée aiguë, sifflements.",
              "Exacerbation d'asthme.", "Nébulisation salbutamol, corticoïdes.", "En cours"),
         ]
+        consults = []
         for p_idx, e_idx, d_idx, ana, diag, presc, statut in data:
-            ConsultationMedicale.objects.get_or_create(
+            c, _ = ConsultationMedicale.objects.get_or_create(
                 patient=patients[p_idx], dossier=dossiers[d_idx],
                 medecin=employes[e_idx], organisation=org,
                 defaults={
@@ -466,6 +515,8 @@ class Command(BaseCommand):
                     "prescription": presc, "statut": statut,
                 },
             )
+            consults.append(c)
+        return consults
 
     def _soins(self, org, patients, dossiers, employes):
         infirmiers = employes[2:4]
@@ -476,18 +527,21 @@ class Command(BaseCommand):
             (3, 1, "115/75", 37.5, 100, 24, 92, 70.0, 168.0, ["Nébulisation", "Oxygénothérapie"], "Saturation améliorée."),
             (4, 0, "145/90", 36.9, 68, 15, 95, 80.0, 172.0, ["Pose ECG", "Prélèvement"], "Stabilisé."),
         ]
+        soins = []
         for i, row in enumerate(data):
-            p_idx, d_idx, tens, temp, pouls, resp, sat, poids, taille, soins, obs = row
-            SoinInfirmier.objects.get_or_create(
+            p_idx, d_idx, tens, temp, pouls, resp, sat, poids, taille, soins_eff, obs = row
+            s, _ = SoinInfirmier.objects.get_or_create(
                 patient=patients[p_idx], dossier=dossiers[d_idx],
                 infirmier=infirmiers[i % 2], organisation=org,
                 defaults={
                     "tension": tens, "temperature": temp, "pouls": pouls,
                     "respiration": resp, "saturation": sat, "poids": poids,
-                    "taille": taille, "soins_effectues": soins, "observations": obs,
+                    "taille": taille, "soins_effectues": soins_eff, "observations": obs,
                     "statut": "Terminé",
                 },
             )
+            soins.append(s)
+        return soins
 
     def _examens_labo(self, org, patients, dossiers, employes):
         data = [
@@ -498,8 +552,9 @@ class Command(BaseCommand):
             (4, 4, "Troponine I", "0.08 ng/mL (élevé)", "Résultats disponibles"),
             (5, 5, "Bilan hépatique", None, "Demandé"),
         ]
+        examens = []
         for p_idx, d_idx, typ, res, statut in data:
-            ExamenLabo.objects.get_or_create(
+            e, _ = ExamenLabo.objects.get_or_create(
                 patient=patients[p_idx], dossier=dossiers[d_idx],
                 type_examen=typ, organisation=org,
                 defaults={
@@ -508,6 +563,8 @@ class Command(BaseCommand):
                     "date_resultat": timezone.now() if res else None,
                 },
             )
+            examens.append(e)
+        return examens
 
     def _examens_imagerie(self, org, patients, dossiers, employes):
         data = [
@@ -517,8 +574,9 @@ class Command(BaseCommand):
             (3, 3, "IRM", None, "Demandé"),
             (4, 4, "Radiographie", "Cardiomégalie modérée.", "Résultats disponibles"),
         ]
+        examens = []
         for p_idx, d_idx, typ, cr, statut in data:
-            ExamenImagerie.objects.get_or_create(
+            e, _ = ExamenImagerie.objects.get_or_create(
                 patient=patients[p_idx], dossier=dossiers[d_idx],
                 type=typ, organisation=org,
                 defaults={
@@ -527,6 +585,8 @@ class Command(BaseCommand):
                     "date_resultat": timezone.now() if cr else None,
                 },
             )
+            examens.append(e)
+        return examens
 
     def _medicaments(self, org):
         data = [
@@ -591,12 +651,15 @@ class Command(BaseCommand):
 
     def _dispensations(self, org, ordonnances, employes):
         pharmacien = employes[4]
+        dispensations = []
         for ordo in ordonnances:
             if ordo.statut == "Dispensée":
-                DispensationMedicament.objects.get_or_create(
+                d, _ = DispensationMedicament.objects.get_or_create(
                     ordonnance=ordo, pharmacien=pharmacien, organisation=org,
                     defaults={"notes": "Dispensation effectuée."},
                 )
+                dispensations.append(d)
+        return dispensations
 
     def _factures(self, org, patients, dossiers):
         factures_data = [
@@ -622,6 +685,7 @@ class Command(BaseCommand):
                 ("Échocardiographie", 1, 40000),
             ]),
         ]
+        factures = []
         for num, p_idx, d_idx, statut, methode, assur, total, lignes in factures_data:
             f, _ = Facture.objects.get_or_create(
                 numero_facture=num, organisation=org,
@@ -639,6 +703,8 @@ class Command(BaseCommand):
                     facture=f, description=desc,
                     defaults={"quantite": qte, "prix_unitaire": pu},
                 )
+            factures.append(f)
+        return factures
 
     def _depenses(self, org):
         data = [
@@ -650,16 +716,19 @@ class Command(BaseCommand):
             ("Fournitures", 95000, "Consommables médico-chirurgicaux", date(2024, 4, 18)),
             ("Autres", 45000, "Frais de communication et internet", date(2024, 4, 30)),
         ]
+        depenses = []
         for cat, montant, desc, d in data:
-            Depense.objects.get_or_create(
+            dep, _ = Depense.objects.get_or_create(
                 categorie=cat, date=d, organisation=org,
                 defaults={"montant": montant, "description": desc},
             )
+            depenses.append(dep)
+        return depenses
 
     def _logs(self, org):
         admin = User.objects.filter(organisation=org, is_staff=True).first()
         if not admin:
-            return
+            return []
         log_data = [
             ("Connexion admin", "AUTH", 1, "User", "LOGIN"),
             ("Création patient Koumba Alice", "INFO", 1, "Patient", "CREATE"),
@@ -667,8 +736,9 @@ class Command(BaseCommand):
             ("Facture FAC-2024-001 payée", "INFO", 1, "Facture", "UPDATE"),
             ("Dispensation ordonnance", "INFO", 1, "DispensationMedicament", "CREATE"),
         ]
+        logs = []
         for msg, typ, model_id, model_name, action in log_data:
-            Log.objects.get_or_create(
+            l, _ = Log.objects.get_or_create(
                 message=msg, organisation=org,
                 defaults={
                     "type": typ, "model_id": model_id,
@@ -676,3 +746,36 @@ class Command(BaseCommand):
                     "user_id": admin.id,
                 },
             )
+            logs.append(l)
+        return logs
+
+    def _print_summary(self, org, users):
+        self.stdout.write(self.style.HTTP_INFO(
+            "\n══ RÉSUMÉ ══════════════════════════════════════"
+        ))
+        self.stdout.write(f"  Organisation : {self.style.SUCCESS(org.nom)} (id={org.id})")
+        self.stdout.write("\n  Comptes utilisateurs de démo :")
+        self.stdout.write(f"  {'Email':<35} {'Mot de passe':<16} {'Rôle'}")
+        self.stdout.write(f"  {'-'*35} {'-'*16} {'-'*20}")
+        credentials = [
+            ("admin@hms-demo.ga",      "Admin2024!",      "Administrateur (staff)"),
+            ("j.dupont@hms-demo.ga",   "Medecin2024!",    "Médecin"),
+            ("s.martin@hms-demo.ga",   "Medecin2024!",    "Médecin"),
+            ("h.nzamba@hms-demo.ga",   "Infirmier2024!",  "Infirmier"),
+            ("m.obiang@hms-demo.ga",   "Infirmier2024!",  "Infirmière"),
+            ("p.biyogo@hms-demo.ga",   "Pharma2024!",     "Pharmacien"),
+            ("c.ondo@hms-demo.ga",     "Labo2024!",       "Laborantine"),
+            ("a.mouele@hms-demo.ga",   "Radio2024!",      "Radiologue"),
+        ]
+        for email, pwd, role in credentials:
+            self.stdout.write(f"  {email:<35} {pwd:<16} {role}")
+        self.stdout.write(self.style.HTTP_INFO(
+            "══════════════════════════════════════════════════"
+        ))
+        self.stdout.write(
+            self.style.WARNING(
+                "\n  ⚠  Si vous étiez connecté avant le --reset, déconnectez-vous"
+                "\n     et reconnectez-vous avec les identifiants ci-dessus.\n"
+            )
+        )
+        self.stdout.write(self.style.SUCCESS("✔  Seed démo terminé avec succès."))
