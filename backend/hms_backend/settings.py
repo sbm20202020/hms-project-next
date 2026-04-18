@@ -76,7 +76,10 @@ if IS_PRODUCTION:
     DATABASES["default"] = dj_database_url.parse(
         os.getenv("DATABASE_URL"),
         conn_max_age=600,
-        ssl_require=os.getenv("DATABASE_SSL_REQUIRE", "true").lower() == "true",
+    )
+    DATABASES["default"].setdefault("OPTIONS", {})
+    DATABASES["default"]["OPTIONS"]["sslmode"] = (
+        "require" if os.getenv("DATABASE_SSL_REQUIRE", "true").lower() == "true" else "prefer"
     )
 
 
