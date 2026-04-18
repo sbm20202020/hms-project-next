@@ -90,4 +90,5 @@ Toutes les autres requêtes `/api/*` sont proxiées vers Django via `next.config
 | `DJANGO_SECRET_KEY` | root `.env` | Obligatoire en prod |
 | `NEXTAUTH_SECRET` | root `.env` | Obligatoire |
 | `NEXTAUTH_URL` | root `.env` | URL publique du frontend |
-| `DJANGO_API_URL` | `frontend/.env.local` | URL du backend (dev local) |
+| `DJANGO_API_URL` | `frontend/.env.local` | Origine backend Django (ex: `http://localhost:8000`, sans suffixe `/api`) |
+| `NEXT_FORCE_API_REWRITE` | `frontend/.env.local` | Optionnel (`true`) pour forcer les rewrites même si `DJANGO_API_URL` et `NEXTAUTH_URL` ont la même origine |
