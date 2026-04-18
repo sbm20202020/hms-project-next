@@ -1,91 +1,93 @@
-# HMS Project Next
+# HMS — Hospital Management System
 
-Stack :
-- **Frontend** : Next.js
-- **Backend API** : Django + Django REST Framework
-- **Auth** : next-auth (JWT) → appels validés côté Django (simplejwt)
-- **Base de données** : SQLite en développement, PostgreSQL en production
+Stack : **Next.js 15** · **Django 5** · **PostgreSQL 16** · **Docker Compose**
 
----
-
-## 1) Frontend (Next.js)
-
-```bash
-corepack enable
-corepack pnpm install
-cp .env.example .env.local   # puis éditer les valeurs
-corepack pnpm dev
+```
+hms-project-next/
+├── frontend/          # Next.js 15 (App Router, Tailwind, next-auth)
+├── backend/           # Django 5 REST API (DRF + SimpleJWT)
+├── docker/
+│   ├── Dockerfile.frontend
+│   └── Dockerfile.backend
+├── docker-compose.yml
+└── .env.example       # Docker Compose variables
 ```
 
-Le frontend démarre sur `http://localhost:3000`.
+---
 
-Les appels `/api/*` (sauf `/api/auth/`) sont proxifiés automatiquement vers le backend Django (`DJANGO_API_URL`).
+## Démarrage rapide (Docker)
 
-### Variables d'environnement (.env.local)
+```bash
+# 1. Copier et remplir les variables d'environnement
+cp .env.example .env
 
-| Variable | Description |
-|---|---|
-| `NEXTAUTH_URL` | URL publique du frontend |
-| `NEXTAUTH_SECRET` | Clé secrète next-auth |
-| `DJANGO_API_URL` | URL du backend Django (défaut `http://localhost:8000`) |
-| `GOOGLE_CLIENT_ID` | OAuth Google (optionnel) |
-| `GOOGLE_CLIENT_SECRET` | OAuth Google (optionnel) |
+# 2. Lancer la stack
+docker compose up --build
+
+# 3. Créer le premier superutilisateur Django (une seule fois)
+docker compose exec backend python manage.py createsuperuser
+```
+
+Accès :
+- **Frontend** → http://localhost:3000
+- **Backend API** → http://localhost:8000/api/
+- **Django Admin** → http://localhost:8000/admin/
 
 ---
 
-## 2) Backend (Django)
+## Développement local (sans Docker)
+
+### Backend
 
 ```bash
 cd backend
-python3 -m venv .venv
-source .venv/bin/activate
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.example .env   # éditez si nécessaire
 python manage.py migrate
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver
 ```
 
-Le backend démarre sur `http://localhost:8000`.
+### Frontend
 
-### Endpoints principaux
-
-| Méthode | URL | Description |
-|---|---|---|
-| GET | `/api/health/` | Healthcheck |
-| POST | `/api/auth/signup/` | Inscription |
-| POST | `/api/auth/token/` | Connexion → JWT |
-| POST | `/api/auth/token/refresh/` | Rafraîchissement JWT |
-| GET/POST | `/api/patients/` | Liste / création patients |
-| GET | `/api/patients/count/` | Comptage patients |
-| GET/POST | `/api/dossiers/` | Liste / création dossiers |
-| PUT | `/api/dossiers/<id>/` | Mise à jour dossier + ticket |
-| GET | `/api/dossiers/today/` | Dossiers du jour |
-| GET | `/api/dossiers/yesterday/` | Dossiers d'hier |
-| GET | `/api/dossiers/count/` | Statistiques dossiers |
-| GET | `/api/dossiers/date/<YYYY-MM-DD>/` | Dossiers par date |
-| GET | `/api/hospital/services/` | Liste services |
-| GET | `/api/hospital/tickets/` | Tickets du jour |
-| PUT | `/api/hospital/tickets/<id>/` | Mise à jour ticket |
-| GET/POST | `/api/soins/` | Soins |
-
-### Configuration base de données
-
-- **Dev** : SQLite par défaut
-- **Prod** (`DJANGO_ENV=production`) : PostgreSQL depuis `DATABASE_URL`
-
-### Variables d'environnement (backend/.env)
-
-Voir `backend/.env.example` pour la liste complète.
+```bash
+cd frontend
+corepack enable pnpm
+pnpm install
+cp .env.example .env.local   # éditez DJANGO_API_URL=http://localhost:8000
+pnpm dev
+```
 
 ---
 
-## Tests
+## Architecture
 
-```bash
-# Backend
-cd backend && python manage.py test
-
-# Frontend lint
-corepack pnpm lint
+```
+Browser
+  │
+  ▼
+Next.js  (port 3000)
+  │  /api/auth/* ──────────────► next-auth (JWT en session)
+  │  /api/*      ──────────────► Django API (proxy beforeFiles)
+  │
+  ▼
+Django   (port 8000)
+  │
+  ▼
+PostgreSQL (port 5432)
 ```
 
+Les routes API Next.js (`src/app/api/`) ne contiennent plus que le handler `[...nextauth]`.
+Toutes les autres requêtes `/api/*` sont proxiées vers Django via `next.config.mjs`.
+
+---
+
+## Variables d'environnement
+
+| Variable | Où | Description |
+|---|---|---|
+| `POSTGRES_PASSWORD` | root `.env` | Obligatoire |
+| `DJANGO_SECRET_KEY` | root `.env` | Obligatoire en prod |
+| `NEXTAUTH_SECRET` | root `.env` | Obligatoire |
+| `NEXTAUTH_URL` | root `.env` | URL publique du frontend |
+| `DJANGO_API_URL` | `frontend/.env.local` | URL du backend (dev local) |

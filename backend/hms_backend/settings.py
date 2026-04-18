@@ -70,6 +70,10 @@ WSGI_APPLICATION = 'hms_backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+#
+# Priority:
+#   1. DATABASE_URL env var (Docker / production) → PostgreSQL
+#   2. Fallback → SQLite (local development without Docker)
 
 DATABASES = {
     'default': {
@@ -78,17 +82,16 @@ DATABASES = {
     }
 }
 
-if IS_PRODUCTION:
-    if not os.getenv("DATABASE_URL"):
-        raise ValueError("DATABASE_URL must be set when DJANGO_ENV=production")
-    DATABASES["default"] = dj_database_url.parse(
-        os.getenv("DATABASE_URL"),
-        conn_max_age=600,
-    )
+_database_url = os.getenv("DATABASE_URL")
+if _database_url:
+    DATABASES["default"] = dj_database_url.parse(_database_url, conn_max_age=600)
     DATABASES["default"].setdefault("OPTIONS", {})
-    DATABASES["default"]["OPTIONS"]["sslmode"] = (
-        "require" if os.getenv("DATABASE_SSL_REQUIRE", "true").lower() == "true" else "prefer"
-    )
+    if IS_PRODUCTION:
+        DATABASES["default"]["OPTIONS"]["sslmode"] = (
+            "require" if os.getenv("DATABASE_SSL_REQUIRE", "true").lower() == "true" else "prefer"
+        )
+elif IS_PRODUCTION:
+    raise ValueError("DATABASE_URL must be set when DJANGO_ENV=production")
 
 
 # Password validation
