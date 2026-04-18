@@ -1,12 +1,10 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { compare } from 'bcryptjs'
-import prisma from './prisma'
-import { PrismaAdapter } from '@auth/prisma-adapter'
+
+const DJANGO_API_URL = process.env.DJANGO_API_URL || 'http://localhost:8000'
 
 export const authOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -23,31 +21,32 @@ export const authOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          },
-          include: {
-            contact: true
+        try {
+          const res = await fetch(`${DJANGO_API_URL}/api/auth/token/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          })
+
+          if (!res.ok) return null
+
+          const data = await res.json()
+
+          if (!data.access) return null
+
+          return {
+            id: data.user_id || credentials.email,
+            email: credentials.email,
+            djangoAccessToken: data.access,
+            djangoRefreshToken: data.refresh,
+            organisationId: data.organisation_id,
+            accessType: data.access_type,
           }
-        })
-
-        if (!user || !user.password) {
+        } catch {
           return null
-        }
-
-        const isPasswordValid = await compare(credentials.password, user.password)
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          ...user,
-          accessType: user.accessType,
-          contactId: user.contactId,
-          contact: user.contact,
-          organisationId: user.organisationId
         }
       }
     })
@@ -65,10 +64,10 @@ export const authOptions = {
         return {
           ...token,
           id: user.id,
+          djangoAccessToken: user.djangoAccessToken,
+          djangoRefreshToken: user.djangoRefreshToken,
           accessType: user.accessType,
-          contactId: user.contactId,
-          contact: user.contact,
-          organisationId: user.organisationId
+          organisationId: user.organisationId,
         }
       }
       return token
@@ -80,10 +79,9 @@ export const authOptions = {
           ...session.user,
           id: token.id,
           accessType: token.accessType,
-          contactId: token.contactId,
-          contact: token.contact,
-          organisationId: token.organisationId
-        }
+          organisationId: token.organisationId,
+        },
+        djangoAccessToken: token.djangoAccessToken,
       }
     },
   }

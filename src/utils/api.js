@@ -2,16 +2,31 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "/api", // Tu peux mettre l'URL de ton API
-  timeout: 20000,  // Timeout de 10 secondes
+  baseURL: "/api",
+  timeout: 20000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+// Attach Django JWT from the next-auth session if available
+api.interceptors.request.use(async (config) => {
+  try {
+    // getSession works in both browser and server components
+    const { getSession } = await import("next-auth/react");
+    const session = await getSession();
+    if (session?.djangoAccessToken) {
+      config.headers["Authorization"] = `Bearer ${session.djangoAccessToken}`;
+    }
+  } catch {
+    // running in an environment where next-auth is not available – skip
+  }
+  return config;
+});
+
 // Intercepteur pour gérer les erreurs
 api.interceptors.response.use(
-  (response) => response.data, // on retourne directement data
+  (response) => response.data,
   (error) => {
     if (error.code === "ECONNABORTED") {
       return Promise.reject(new Error("Requête annulée : délai dépassé"));
@@ -22,28 +37,4 @@ api.interceptors.response.use(
 
 export default api;
 
-
-
-
-// // utils/api.js
-// export async function apiFetch(url, data = null, method = "GET") {
-//     const options = {
-//       method,
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//     };
-//     if (data) {
-//       options.body = JSON.stringify(data);
-//     }
-  
-//     const response = await fetch(url, options);
-  
-//     if (!response.ok) {
-//       const errorText = await response.text();
-//       throw new Error(errorText || "Une erreur est survenue");
-//     }
-  
-//     return response.json();
-//   }
   
