@@ -24,7 +24,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - hms-net
+      - bg-network-01
 
   # ── Django backend ──────────────────────────────────────────────────────────
   backend:
@@ -46,7 +46,7 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     networks:
-      - hms-net
+      - bg-network-01
 
   # ── Next.js frontend ────────────────────────────────────────────────────────
   frontend:
@@ -65,11 +65,12 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     networks:
-      - hms-net
+      - bg-network-01
 
 volumes:
   postgres_data:
 
+
 networks:
-  hms-net:
-    driver: bridge
+  bg-network-01:
+    external: true
