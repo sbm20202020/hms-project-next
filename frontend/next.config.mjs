@@ -1,14 +1,17 @@
 /** @type {import("next").NextConfig} */
 
 const DEFAULT_DJANGO_API_URL = "http://localhost:8000";
+const DJANGO_API_PATH_SEGMENT = "/api";
 
 function normalizeDjangoApiUrl(rawUrl) {
   try {
-    const parsed = new URL(rawUrl || DEFAULT_DJANGO_API_URL);
+    const candidateUrl = typeof rawUrl === "string" && rawUrl.trim() ? rawUrl.trim() : DEFAULT_DJANGO_API_URL;
+    const parsed = new URL(candidateUrl);
     const trimmedPath = parsed.pathname.replace(/\/+$/, "");
 
-    if (trimmedPath.endsWith("/api")) {
-      parsed.pathname = trimmedPath.slice(0, -4) || "/";
+    if (trimmedPath.endsWith(DJANGO_API_PATH_SEGMENT)) {
+      const withoutApiPath = trimmedPath.substring(0, trimmedPath.length - DJANGO_API_PATH_SEGMENT.length);
+      parsed.pathname = withoutApiPath || "/";
     } else {
       parsed.pathname = trimmedPath || "/";
     }
@@ -40,6 +43,8 @@ const nextConfig = {
     const forceApiRewrite = process.env.NEXT_FORCE_API_REWRITE === "true";
 
     if (!forceApiRewrite && frontendOrigin && djangoOrigin && frontendOrigin === djangoOrigin) {
+      // Avoid self-referential API proxying when both URLs share the same origin.
+      // In that deployment mode, /api routing should be handled by the edge reverse proxy.
       return [];
     }
 
