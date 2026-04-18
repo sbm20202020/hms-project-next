@@ -15,10 +15,18 @@ const nextConfig = {
           source: "/api/auth/signup",
           destination: `${djangoUrl}/api/auth/signup/`,
         },
-        // All /api/* except /api/auth/* → Django
+        // All /api/* except /api/auth/* → Django.
+        // Two rules normalise trailing slashes so Django's APPEND_SLASH=True
+        // never triggers a 301 redirect loop:
+        //   1. path already ends with '/' → forward as-is
         {
-          source: "/api/:path((?!auth/).*)",
+          source: "/api/:path((?!auth/).*/)",
           destination: `${djangoUrl}/api/:path`,
+        },
+        //   2. path does NOT end with '/' → add one
+        {
+          source: "/api/:path((?!auth/).*[^/])",
+          destination: `${djangoUrl}/api/:path/`,
         },
       ],
     };
