@@ -354,3 +354,380 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+
+
+# ─── Nouveaux modèles HMS ──────────────────────────────────────────────────────
+
+class Facture(models.Model):
+    STATUT_CHOICES = [
+        ("En attente", "En attente"),
+        ("Validée", "Validée"),
+        ("Payée", "Payée"),
+    ]
+    ASSURANCE_CHOICES = [
+        ("Aucune", "Aucune"),
+        ("CNSS", "CNSS"),
+        ("CNAMGS", "CNAMGS"),
+        ("Assurance Privée", "Assurance Privée"),
+    ]
+    PAIEMENT_CHOICES = [
+        ("Espèces", "Espèces"),
+        ("Carte Bancaire", "Carte Bancaire"),
+        ("Mobile Money", "Mobile Money"),
+        ("Virement", "Virement"),
+    ]
+    numero_facture = models.CharField(max_length=100, unique=True)
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True, related_name="factures")
+    dossier = models.ForeignKey(DossierPatient, on_delete=models.SET_NULL, null=True, blank=True, related_name="factures")
+    date_facture = models.DateTimeField(auto_now_add=True)
+    montant_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="En attente")
+    methode_paiement = models.CharField(max_length=100, choices=PAIEMENT_CHOICES, null=True, blank=True)
+    type_assurance = models.CharField(max_length=100, choices=ASSURANCE_CHOICES, default="Aucune")
+    notes = models.TextField(null=True, blank=True)
+    created_by = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="factures_creees")
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="factures")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "facture"
+
+    def __str__(self):
+        return self.numero_facture
+
+
+class LigneFacture(models.Model):
+    facture = models.ForeignKey(Facture, on_delete=models.CASCADE, related_name="lignes")
+    description = models.CharField(max_length=500)
+    quantite = models.IntegerField(default=1)
+    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2)
+    montant = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    class Meta:
+        db_table = "ligne_facture"
+
+    def save(self, *args, **kwargs):
+        self.montant = self.quantite * self.prix_unitaire
+        super().save(*args, **kwargs)
+
+
+class SoinInfirmier(models.Model):
+    STATUT_CHOICES = [
+        ("En attente", "En attente"),
+        ("En cours", "En cours"),
+        ("Terminé", "Terminé"),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True, related_name="soins")
+    dossier = models.ForeignKey(DossierPatient, on_delete=models.SET_NULL, null=True, blank=True, related_name="soins")
+    infirmier = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="soins")
+    date_heure = models.DateTimeField(auto_now_add=True)
+    tension = models.CharField(max_length=20, null=True, blank=True)
+    temperature = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    pouls = models.IntegerField(null=True, blank=True)
+    respiration = models.IntegerField(null=True, blank=True)
+    saturation = models.IntegerField(null=True, blank=True)
+    poids = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    taille = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    soins_effectues = models.JSONField(default=list, blank=True)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="Terminé")
+    observations = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="soins_infirmiers")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "soin_infirmier"
+
+
+class RendezVous(models.Model):
+    STATUT_CHOICES = [
+        ("En attente", "En attente"),
+        ("Confirmé", "Confirmé"),
+        ("Annulé", "Annulé"),
+        ("Terminé", "Terminé"),
+        ("Urgent", "Urgent"),
+    ]
+    TYPE_CHOICES = [
+        ("Consultation", "Consultation"),
+        ("Suivi", "Suivi"),
+        ("Urgence", "Urgence"),
+        ("Contrôle", "Contrôle"),
+        ("Téléconsultation", "Téléconsultation"),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True, related_name="rendez_vous")
+    medecin = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="rendez_vous")
+    date = models.DateField()
+    heure = models.TimeField()
+    type = models.CharField(max_length=100, choices=TYPE_CHOICES, default="Consultation")
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="En attente")
+    duree = models.IntegerField(default=30)
+    notes = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="rendez_vous")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "rendez_vous"
+        ordering = ["date", "heure"]
+
+
+class ExamenLabo(models.Model):
+    STATUT_CHOICES = [
+        ("Demandé", "Demandé"),
+        ("En cours", "En cours"),
+        ("Résultats disponibles", "Résultats disponibles"),
+        ("Annulé", "Annulé"),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True, related_name="examens_labo")
+    dossier = models.ForeignKey(DossierPatient, on_delete=models.SET_NULL, null=True, blank=True, related_name="examens_labo")
+    type_examen = models.CharField(max_length=255)
+    resultats = models.TextField(null=True, blank=True)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="Demandé")
+    date_demande = models.DateTimeField(auto_now_add=True)
+    date_resultat = models.DateTimeField(null=True, blank=True)
+    demande_par = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="examens_labo_demandes")
+    notes = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="examens_labo")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "examen_labo"
+
+
+class ExamenImagerie(models.Model):
+    STATUT_CHOICES = [
+        ("Demandé", "Demandé"),
+        ("En cours", "En cours"),
+        ("Résultats disponibles", "Résultats disponibles"),
+        ("Annulé", "Annulé"),
+    ]
+    TYPE_CHOICES = [
+        ("Radiographie", "Radiographie"),
+        ("Échographie", "Échographie"),
+        ("Scanner", "Scanner"),
+        ("IRM", "IRM"),
+        ("Mammographie", "Mammographie"),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True, related_name="examens_imagerie")
+    dossier = models.ForeignKey(DossierPatient, on_delete=models.SET_NULL, null=True, blank=True, related_name="examens_imagerie")
+    type = models.CharField(max_length=100, choices=TYPE_CHOICES)
+    compte_rendu = models.TextField(null=True, blank=True)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="Demandé")
+    date_demande = models.DateTimeField(auto_now_add=True)
+    date_resultat = models.DateTimeField(null=True, blank=True)
+    demande_par = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="examens_imagerie_demandes")
+    notes = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="examens_imagerie")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "examen_imagerie"
+
+
+class Medicament(models.Model):
+    FORME_CHOICES = [
+        ("Comprimé", "Comprimé"),
+        ("Gélule", "Gélule"),
+        ("Sirop", "Sirop"),
+        ("Injectable", "Injectable"),
+        ("Pommade", "Pommade"),
+        ("Suppositoire", "Suppositoire"),
+        ("Collyre", "Collyre"),
+    ]
+    STATUT_CHOICES = [
+        ("Disponible", "Disponible"),
+        ("Rupture de stock", "Rupture de stock"),
+        ("En commande", "En commande"),
+    ]
+    nom = models.CharField(max_length=255)
+    dci = models.CharField(max_length=255, null=True, blank=True)
+    forme = models.CharField(max_length=100, choices=FORME_CHOICES, default="Comprimé")
+    stock = models.IntegerField(default=0)
+    seuil_alerte = models.IntegerField(default=10)
+    prix = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="Disponible")
+    description = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="medicaments")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "medicament"
+
+    def __str__(self):
+        return f"{self.nom} ({self.forme})"
+
+
+class Ordonnance(models.Model):
+    STATUT_CHOICES = [
+        ("En attente", "En attente"),
+        ("Dispensée", "Dispensée"),
+        ("Annulée", "Annulée"),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True, related_name="ordonnances")
+    medecin = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="ordonnances")
+    date = models.DateTimeField(auto_now_add=True)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="En attente")
+    notes = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="ordonnances")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ordonnance"
+
+
+class LigneOrdonnance(models.Model):
+    ordonnance = models.ForeignKey(Ordonnance, on_delete=models.CASCADE, related_name="lignes")
+    medicament = models.ForeignKey(Medicament, on_delete=models.SET_NULL, null=True, blank=True)
+    quantite = models.IntegerField(default=1)
+    posologie = models.CharField(max_length=500, null=True, blank=True)
+    duree = models.CharField(max_length=100, null=True, blank=True)
+
+    class Meta:
+        db_table = "ligne_ordonnance"
+
+
+class DispensationMedicament(models.Model):
+    ordonnance = models.ForeignKey(Ordonnance, on_delete=models.CASCADE, related_name="dispensations")
+    pharmacien = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="dispensations")
+    date_dispensation = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="dispensations")
+
+    class Meta:
+        db_table = "dispensation_medicament"
+
+
+class Chambre(models.Model):
+    TYPE_CHOICES = [
+        ("Simple", "Simple"),
+        ("Double", "Double"),
+        ("Suite", "Suite"),
+        ("Salle commune", "Salle commune"),
+        ("Réanimation", "Réanimation"),
+    ]
+    STATUT_CHOICES = [
+        ("Disponible", "Disponible"),
+        ("Occupée", "Occupée"),
+        ("Maintenance", "Maintenance"),
+    ]
+    numero = models.CharField(max_length=20)
+    type = models.CharField(max_length=50, choices=TYPE_CHOICES, default="Simple")
+    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, related_name="chambres")
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="Disponible")
+    nombre_lits = models.IntegerField(default=1)
+    description = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="chambres")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "chambre"
+        unique_together = ("numero", "organisation")
+
+    def __str__(self):
+        return f"Chambre {self.numero}"
+
+
+class Lit(models.Model):
+    STATUT_CHOICES = [
+        ("Libre", "Libre"),
+        ("Occupé", "Occupé"),
+        ("Maintenance", "Maintenance"),
+    ]
+    chambre = models.ForeignKey(Chambre, on_delete=models.CASCADE, related_name="lits")
+    numero = models.CharField(max_length=10)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="Libre")
+
+    class Meta:
+        db_table = "lit"
+        unique_together = ("chambre", "numero")
+
+    def __str__(self):
+        return f"Lit {self.numero} - Chambre {self.chambre.numero}"
+
+
+class Admission(models.Model):
+    STATUT_CHOICES = [
+        ("En cours", "En cours"),
+        ("Sorti", "Sorti"),
+        ("Transféré", "Transféré"),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True, related_name="admissions")
+    dossier = models.ForeignKey(DossierPatient, on_delete=models.SET_NULL, null=True, blank=True, related_name="admissions")
+    lit = models.ForeignKey(Lit, on_delete=models.SET_NULL, null=True, blank=True, related_name="admissions")
+    medecin = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="admissions")
+    date_entree = models.DateTimeField(auto_now_add=True)
+    date_sortie_prevue = models.DateField(null=True, blank=True)
+    date_sortie_reelle = models.DateTimeField(null=True, blank=True)
+    motif = models.TextField(null=True, blank=True)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="En cours")
+    notes = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="admissions")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "admission"
+
+
+class Transfert(models.Model):
+    admission = models.ForeignKey(Admission, on_delete=models.CASCADE, related_name="transferts")
+    ancien_lit = models.ForeignKey(Lit, on_delete=models.SET_NULL, null=True, blank=True, related_name="transferts_depuis")
+    nouveau_lit = models.ForeignKey(Lit, on_delete=models.SET_NULL, null=True, blank=True, related_name="transferts_vers")
+    date = models.DateTimeField(auto_now_add=True)
+    motif = models.TextField(null=True, blank=True)
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="transferts")
+
+    class Meta:
+        db_table = "transfert"
+
+
+class Depense(models.Model):
+    CATEGORIE_CHOICES = [
+        ("Salaires", "Salaires"),
+        ("Équipements", "Équipements"),
+        ("Médicaments", "Médicaments"),
+        ("Maintenance", "Maintenance"),
+        ("Fournitures", "Fournitures"),
+        ("Énergie", "Énergie"),
+        ("Autres", "Autres"),
+    ]
+    categorie = models.CharField(max_length=100, choices=CATEGORIE_CHOICES)
+    montant = models.DecimalField(max_digits=12, decimal_places=2)
+    description = models.TextField(null=True, blank=True)
+    date = models.DateField()
+    justificatif = models.CharField(max_length=500, null=True, blank=True)
+    created_by = models.ForeignKey("User", on_delete=models.SET_NULL, null=True, blank=True, related_name="depenses_creees")
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="depenses")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "depense"
+
+
+class ConsultationMedicale(models.Model):
+    STATUT_CHOICES = [
+        ("En cours", "En cours"),
+        ("Terminée", "Terminée"),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.SET_NULL, null=True, blank=True, related_name="consultations")
+    dossier = models.ForeignKey(DossierPatient, on_delete=models.SET_NULL, null=True, blank=True, related_name="consultations")
+    medecin = models.ForeignKey(Employe, on_delete=models.SET_NULL, null=True, blank=True, related_name="consultations")
+    date = models.DateTimeField(auto_now_add=True)
+    anamnese = models.TextField(null=True, blank=True)
+    diagnostic = models.TextField(null=True, blank=True)
+    prescription = models.TextField(null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    statut = models.CharField(max_length=50, choices=STATUT_CHOICES, default="En cours")
+    organisation = models.ForeignKey(Organisation, on_delete=models.CASCADE, related_name="consultations")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "consultation_medicale"

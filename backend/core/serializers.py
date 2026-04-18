@@ -122,3 +122,150 @@ class SignupSerializer(serializers.Serializer):
     telephone = serializers.CharField(required=False, allow_blank=True, default="")
     establishment_type = serializers.CharField(required=False, allow_blank=True, default="")
     is_demo_request = serializers.BooleanField(required=False, default=False)
+
+
+# ─── Nouveaux serializers HMS ──────────────────────────────────────────────────
+
+from .models import (
+    Facture, LigneFacture, SoinInfirmier, RendezVous,
+    ExamenLabo, ExamenImagerie,
+    Medicament, Ordonnance, LigneOrdonnance, DispensationMedicament,
+    Chambre, Lit, Admission, Transfert,
+    Depense, ConsultationMedicale, Log,
+)
+
+
+class ServiceFullSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = "__all__"
+
+
+class LigneFactureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LigneFacture
+        fields = "__all__"
+
+
+class FactureSerializer(serializers.ModelSerializer):
+    lignes = LigneFactureSerializer(many=True, read_only=True)
+    patient = PatientSerializer(read_only=True)
+
+    class Meta:
+        model = Facture
+        fields = "__all__"
+
+
+class SoinInfirmierSerializer(serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
+
+    class Meta:
+        model = SoinInfirmier
+        fields = "__all__"
+
+
+class RendezVousSerializer(serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
+    medecin = EmployeSerializer(read_only=True)
+
+    class Meta:
+        model = RendezVous
+        fields = "__all__"
+
+
+class ExamenLaboSerializer(serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
+
+    class Meta:
+        model = ExamenLabo
+        fields = "__all__"
+
+
+class ExamenImagerieSerializer(serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
+
+    class Meta:
+        model = ExamenImagerie
+        fields = "__all__"
+
+
+class MedicamentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Medicament
+        fields = "__all__"
+
+
+class LigneOrdonnanceSerializer(serializers.ModelSerializer):
+    medicament = MedicamentSerializer(read_only=True)
+
+    class Meta:
+        model = LigneOrdonnance
+        fields = "__all__"
+
+
+class OrdonnanceSerializer(serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
+    medecin = EmployeSerializer(read_only=True)
+    lignes = LigneOrdonnanceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Ordonnance
+        fields = "__all__"
+
+
+class DispensationMedicamentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DispensationMedicament
+        fields = "__all__"
+
+
+class LitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lit
+        fields = "__all__"
+
+
+class ChambreSerializer(serializers.ModelSerializer):
+    lits = LitSerializer(many=True, read_only=True)
+    service = ServiceSerializer(read_only=True)
+
+    class Meta:
+        model = Chambre
+        fields = "__all__"
+
+
+class AdmissionSerializer(serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
+    lit = LitSerializer(read_only=True)
+    medecin = EmployeSerializer(read_only=True)
+
+    class Meta:
+        model = Admission
+        fields = "__all__"
+
+
+class TransfertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transfert
+        fields = "__all__"
+
+
+class DepenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Depense
+        fields = "__all__"
+
+
+class ConsultationMedicaleSerializer(serializers.ModelSerializer):
+    patient = PatientSerializer(read_only=True)
+    medecin = EmployeSerializer(read_only=True)
+
+    class Meta:
+        model = ConsultationMedicale
+        fields = "__all__"
+
+
+class LogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Log
+        fields = "__all__"

@@ -1,205 +1,116 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import DashboardLayout from "../../../components/dashboard-layout"
-import AdvancedTable from "../../../components/ui/advanced-table"
-import { Button } from "../../../components/ui/button"
-import { Badge } from "../../../components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
-import { Plus, Eye, Edit, Calendar, Clock, User, UserCheck } from "lucide-react"
-// import { db } from "../../lib/database"
+import DashboardLayout from "@/components/dashboard-layout"
+import AdvancedTable from "@/components/ui/advanced-table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import Modal from "@/components/ui/modal"
+import { Input } from "@/components/ui/input"
+import { rendezVousService } from "@/services/dossierService"
+import { Plus, CheckCircle, XCircle } from "lucide-react"
 
-const statusColors = {
-  Confirmé: "bg-green-100 text-green-800",
+const statutColors = {
+  "Confirmé": "bg-green-100 text-green-800",
   "En attente": "bg-yellow-100 text-yellow-800",
-  Annulé: "bg-red-100 text-red-800",
-  Urgent: "bg-red-100 text-red-800",
-  Terminé: "bg-gray-100 text-gray-800",
+  "Annulé": "bg-red-100 text-red-800",
+  "Terminé": "bg-gray-100 text-gray-800",
+  "Urgent": "bg-red-200 text-red-900",
 }
+
+const emptyForm = { patientId: "", medecinId: "", date: "", heure: "", type: "Consultation", duree: 30, notes: "" }
 
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [form, setForm] = useState(emptyForm)
+  const [submitting, setSubmitting] = useState(false)
+  const today = new Date().toISOString().split("T")[0]
 
-  useEffect(() => {
-    loadAppointments()
-  }, [])
+  useEffect(() => { loadData() }, [])
 
-  const loadAppointments = async () => {
+  const loadData = async () => {
     try {
-      // await db.initializeData()
-      // const appointmentsData = db.getTable("appointments")
-      const appointmentsData = []
-      setAppointments(appointmentsData)
-    } catch (error) {
-      console.error("Erreur lors du chargement des rendez-vous:", error)
-    } finally {
-      setLoading(false)
-    }
+      const data = await rendezVousService.getAll()
+      setAppointments(Array.isArray(data) ? data : [])
+    } catch (e) { console.error(e) } finally { setLoading(false) }
   }
+
+  const handleCreate = async (e) => {
+    e.preventDefault()
+    setSubmitting(true)
+    try {
+      await rendezVousService.create(form)
+      setShowModal(false)
+      setForm(emptyForm)
+      await loadData()
+    } catch (e) { console.error(e) } finally { setSubmitting(false) }
+  }
+
+  const handleUpdateStatut = async (rdv, statut) => {
+    try {
+      await rendezVousService.update(rdv.id, { statut })
+      await loadData()
+    } catch (e) { console.error(e) }
+  }
+
+  const todayCount = appointments.filter(a => a.date === today).length
 
   const columns = [
+    { key: "date", header: "Date", sortable: true, render: (r) => `${r.date || ""} ${r.heure || ""}`.trim() },
+    { key: "patient", header: "Patient", render: (r) => r.patient ? `${r.patient.contact?.nom || ""} ${r.patient.contact?.prenom || ""}`.trim() : `Patient #${r.patient || "—"}` },
+    { key: "medecin", header: "Médecin", render: (r) => r.medecin ? `${r.medecin.contact?.nom || ""} ${r.medecin.contact?.prenom || ""}`.trim() : "—" },
+    { key: "type", header: "Type" },
+    { key: "duree", header: "Durée", render: (r) => `${r.duree || 30} min` },
+    { key: "statut", header: "Statut", render: (r) => <Badge className={statutColors[r.statut] || ""}>{r.statut}</Badge> },
     {
-      key: "date",
-      header: "Date & Heure",
-      sortable: true,
-      render: (value, row) => (
-        <div className="flex items-center space-x-3">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="font-medium">
-              {new Date(value).toLocaleDateString("fr-FR", {
-                day: "2-digit",
-                month: "2-digit",
-              })}
-            </p>
-            <p className="text-sm text-muted-foreground flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              {row.heure}
-            </p>
-          </div>
+      key: "actions", header: "Actions",
+      render: (r) => (
+        <div className="flex gap-1">
+          {r.statut === "En attente" && <Button size="sm" variant="outline" className="text-green-600" onClick={() => handleUpdateStatut(r, "Confirmé")}><CheckCircle className="w-3 h-3 mr-1" />Confirmer</Button>}
+          {(r.statut === "Confirmé" || r.statut === "En attente") && <Button size="sm" variant="outline" className="text-gray-600" onClick={() => handleUpdateStatut(r, "Terminé")}>Terminer</Button>}
+          {r.statut !== "Annulé" && r.statut !== "Terminé" && <Button size="sm" variant="outline" className="text-red-600" onClick={() => handleUpdateStatut(r, "Annulé")}><XCircle className="w-3 h-3" /></Button>}
         </div>
-      ),
-    },
-    {
-      key: "patientNom",
-      header: "Patient",
-      sortable: true,
-      filterable: true,
-      filterLabel: "Nom du patient",
-      render: (value, row) => (
-        <div className="flex items-center space-x-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="font-medium">{value}</p>
-            <p className="text-sm text-muted-foreground">ID: {row.patientId}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "doctorNom",
-      header: "Médecin",
-      sortable: true,
-      filterable: true,
-      filterLabel: "Médecin traitant",
-      render: (value, row) => (
-        <div className="flex items-center space-x-2">
-          <UserCheck className="h-4 w-4 text-muted-foreground" />
-          <div>
-            <p className="font-medium">{value}</p>
-            <p className="text-sm text-muted-foreground">{row.specialite}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
-      key: "type",
-      header: "Type",
-      sortable: true,
-      filterable: true,
-      filterLabel: "Type de rendez-vous",
-      render: (value, row) => (
-        <div>
-          <p className="font-medium">{value}</p>
-          <p className="text-sm text-muted-foreground">{row.duree} minutes</p>
-        </div>
-      ),
-    },
-    {
-      key: "statut",
-      header: "Statut",
-      sortable: true,
-      filterable: true,
-      groupable: true,
-      filterLabel: "Statut du rendez-vous",
-      render: (value) => <Badge className={statusColors[value]}>{value}</Badge>,
-    },
-    {
-      key: "notes",
-      header: "Notes",
-      render: (value) => (
-        <div className="max-w-xs">
-          <p className="text-sm text-muted-foreground truncate">{value || "Aucune note"}</p>
-        </div>
-      ),
+      )
     },
   ]
-
-  const actions = [
-    {
-      icon: <Eye className="h-4 w-4" />,
-      onClick: (row) => {
-        window.location.href = `/appointments/${row.id}`
-      },
-    },
-    {
-      icon: <Edit className="h-4 w-4" />,
-      onClick: (row) => {
-        window.location.href = `/appointments/${row.id}/edit`
-      },
-    },
-  ]
-
-  if (loading) {
-    return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-muted-foreground">Chargement des rendez-vous...</p>
-          </div>
-        </div>
-      </DashboardLayout>
-    )
-  }
 
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Gestion des Rendez-vous</h1>
-            <p className="text-muted-foreground">Planifier et gérer les consultations</p>
-          </div>
-          <Button asChild>
-            <a href="/appointments/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Nouveau RDV
-            </a>
-          </Button>
+          <div><h1 className="text-2xl font-bold">Rendez-vous</h1><p className="text-gray-500">Planning et gestion des rendez-vous</p></div>
+          <Button onClick={() => setShowModal(true)}><Plus className="w-4 h-4 mr-2" />Nouveau RDV</Button>
         </div>
-
-        <Tabs defaultValue="list" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="list">Liste</TabsTrigger>
-            <TabsTrigger value="calendar">Calendrier</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="list">
-            <AdvancedTable
-              title="Liste des Rendez-vous"
-              data={appointments}
-              columns={columns}
-              actions={actions}
-              searchable={true}
-              filterable={true}
-              sortable={true}
-              groupable={true}
-              exportable={true}
-              pageSize={10}
-            />
-          </TabsContent>
-
-          <TabsContent value="calendar">
-            <div className="text-center py-12">
-              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Vue Calendrier</h3>
-              <p className="text-muted-foreground">La vue calendrier sera bientôt disponible</p>
-            </div>
-          </TabsContent>
-        </Tabs>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Total</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{appointments.length}</p></CardContent></Card>
+          <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Confirmés</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-green-600">{appointments.filter(a => a.statut === "Confirmé").length}</p></CardContent></Card>
+          <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Aujourd&apos;hui</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-blue-600">{todayCount}</p></CardContent></Card>
+          <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">En attente</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-yellow-600">{appointments.filter(a => a.statut === "En attente").length}</p></CardContent></Card>
+        </div>
+        <AdvancedTable columns={columns} data={appointments} loading={loading} emptyMessage="Aucun rendez-vous trouvé" />
       </div>
+
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Nouveau Rendez-vous">
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="text-sm font-medium">ID Patient</label><Input value={form.patientId} onChange={e => setForm(f => ({ ...f, patientId: e.target.value }))} placeholder="Ex: 1" /></div>
+            <div><label className="text-sm font-medium">ID Médecin</label><Input value={form.medecinId} onChange={e => setForm(f => ({ ...f, medecinId: e.target.value }))} placeholder="Ex: 1" /></div>
+            <div><label className="text-sm font-medium">Date</label><Input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} required /></div>
+            <div><label className="text-sm font-medium">Heure</label><Input type="time" value={form.heure} onChange={e => setForm(f => ({ ...f, heure: e.target.value }))} required /></div>
+            <div><label className="text-sm font-medium">Type</label>
+              <select className="w-full border rounded px-3 py-2 text-sm" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
+                {["Consultation","Suivi","Urgence","Contrôle","Téléconsultation"].map(o => <option key={o}>{o}</option>)}
+              </select>
+            </div>
+            <div><label className="text-sm font-medium">Durée (min)</label><Input type="number" value={form.duree} onChange={e => setForm(f => ({ ...f, duree: parseInt(e.target.value) || 30 }))} /></div>
+          </div>
+          <div><label className="text-sm font-medium">Notes</label><textarea className="w-full border rounded px-3 py-2 text-sm" rows={2} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} /></div>
+          <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setShowModal(false)}>Annuler</Button><Button type="submit" disabled={submitting}>{submitting ? "..." : "Créer"}</Button></div>
+        </form>
+      </Modal>
     </DashboardLayout>
   )
 }

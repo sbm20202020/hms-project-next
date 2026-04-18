@@ -27,6 +27,8 @@ import {
   UserX,
   ArrowRightLeft,
   ClipboardList,
+  Pill,
+  Layers,
 } from "lucide-react"
 import { Button } from "./ui/button"
 import { useRouter, usePathname } from "next/navigation"
@@ -79,6 +81,7 @@ const getNavigationByRole = (role) => {
             { name: "Laboratoire", href: "/laboratoire", icon: TestTube },
             { name: "Imagerie", href: "/imagerie", icon: Scan },
             { name: "Consultations", href: "/consultations", icon: Stethoscope },
+            { name: "Pharmacie", href: "/pharmacie", icon: Pill },
           ],
         },
         {
@@ -106,6 +109,7 @@ const getNavigationByRole = (role) => {
                 { name: "Utilisateurs", href: "/parametres/utilisateurs", icon: Users },
                 { name: "Rôles", href: "/parametres/roles", icon: UserCheck },
                 { name: "Permissions", href: "/parametres/permissions", icon: Settings },
+                { name: "Services", href: "/parametres/services", icon: Layers },
               ],
             },
           ],
