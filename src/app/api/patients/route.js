@@ -1,0 +1,155 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { z } from "zod";
+import { calculerAge } from "@/utils/helpers";
+import { getSession } from "next-auth/react";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+
+// Schéma de validation avec Zod
+const patientSchema = z.object({
+  nom: z.string().min(1, "Le nom est requis"),
+  prenom: z.string().min(1, "Le prénom est requis"),
+  dateNaissance: z.string().refine(val => !isNaN(Date.parse(val)), {
+    message: "Date de naissance invalide",
+  }),
+  typePatient: z.string().min(1, "Le type de patient est requis"),
+  sexe: z.string().optional(),
+  telephone: z.string().optional(),
+  adresse: z.string().optional(),
+  ville: z.string().optional(),
+  convention: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+  statut: z.string().optional(),
+  service: z.string().optional(),
+  medecinTraitant: z.string().optional(),
+  contactUrgence: z.string().optional(),
+  telephoneUrgence: z.string().optional(),
+  allergies: z.string().optional(),
+  antecedents: z.string().optional(),
+  traitements: z.string().optional(),
+  email: z.string().optional(),
+  codePostal: z.string().optional(),
+  numeroSecu: z.string().optional(),
+  convention: z.string().nullable().optional(),
+});
+
+
+// Récupération de tous les patients
+export async function GET(request) {
+  const session = await getServerSession(authOptions);
+  const sessionOrganisationId = session.user.organisationId;
+
+  const patients = await prisma.patient.findMany({
+    where: {
+      organisationId: sessionOrganisationId
+    },
+    include: {
+    contact: {
+      select: {
+        nom: true,
+        prenom: true,
+        email: true,
+        telephone: true,
+        dateNaissance: true,
+        age: true,
+        sexe: true,
+        adresse: true,
+        ville: true,
+        codePostal: true,
+        numeroSecu: true,
+      }
+    }
+  }});
+  return NextResponse.json(patients);
+}
+
+// Création d'un nouveau patient
+export async function POST(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    const sessionOrganisationId = session.user.organisationId;
+
+    const body = await request.json();
+    const validation = patientSchema.parse(body);
+
+    // console.log("body----------->", body);
+    // console.log("validation----------->", validation);
+    
+    const contactData = {
+      nom: validation.nom,
+      prenom: validation.prenom,
+      sexe: validation.sexe,
+      telephone: validation.telephone,
+      adresse: validation.adresse,
+      ville: validation.ville,
+      codePostal: validation.codePostal,
+      numeroSecu: validation.numeroSecu,
+      email: validation.email,
+      dateNaissance: new Date(validation.dateNaissance),
+      age: calculerAge(validation.dateNaissance),
+      organisationId: sessionOrganisationId,
+    };
+    
+    const contact = await prisma.contact.create({
+      data: contactData,
+    });
+
+    // console.log("contact----------->", contact);
+    
+    const patientData = {
+      typePatient: validation.typePatient,
+      convention: validation.convention,
+      statut: validation.statut,
+      service: validation.service,
+      medecinTraitant: validation.medecinTraitant,
+      contactUrgence: validation.contactUrgence,
+      telephoneUrgence: validation.telephoneUrgence,
+      allergies: validation.allergies,
+      antecedents: validation.antecedents,
+      traitements: validation.traitements,
+      contactId: contact.id,
+      organisationId: sessionOrganisationId,
+    };
+
+    const patient = await prisma.patient.create({data: patientData});
+
+    console.log("patient----------->", patient);
+
+    return NextResponse.json({patient: {...patient, contact}}, { status: 201 });
+  } catch (error) {
+    console.error("Erreur POST patient :", error);
+    return NextResponse.json(
+      { error: error.message || "Erreur lors de la création du patient" },
+      { status: 500 }
+    );
+  }
+}
+
+// import { NextResponse } from "next/server"
+// import prisma from "@/lib/prisma"
+// import { number } from "zod"
+
+// // let patients = []
+
+// export async function GET() {
+//   const patients = await prisma.patient.findMany()
+//   return NextResponse.json(patients)
+// }
+
+// export async function POST(request) {
+//   try {
+//     const newPatient = await request.json()
+
+//     newPatient.age = Number(new Date().getFullYear() - new Date(newPatient.dateNaissance).getFullYear())
+//     newPatient.dateNaissance = new Date(newPatient.dateNaissance)
+//     await prisma.patient.create({
+//       data: newPatient,
+//     })
+    
+//     return NextResponse.json(newPatient, { status: 201 })
+//   } catch (error) {
+//     console.log("error------------", error)
+//     return NextResponse.json({ error: "Erreur lors de la création du patient" }, { status: 500 })
+//   }
+// }
