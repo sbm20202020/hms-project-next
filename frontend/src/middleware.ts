@@ -1,15 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const PUBLIC_EXACT = ["/", "/auth/signin", "/auth/signup"]
+const PUBLIC_EXACT = ["/", "/auth/login", "/auth/signin", "/auth/signup"]
 const PUBLIC_PREFIXES = ["/auth/"]
 
 export async function middleware(req: NextRequest) {
   const { pathname, origin } = req.nextUrl
 
-  // Bypass all /api/* routes — they are protected by Django JWT, not by
-  // Next.js session. Intercepting XHR API calls here causes redirect loops
-  // when NEXTAUTH_URL doesn't exactly match the public origin.
+  // Bypass all /api/* routes — they are proxied to Django which handles its
+  // own JWT authentication.  Redirecting XHR requests to /auth/signin would
+  // cause ERR_TOO_MANY_REDIRECTS in the browser.
+
   if (pathname.startsWith("/api/")) {
     return NextResponse.next()
   }
@@ -22,13 +23,13 @@ export async function middleware(req: NextRequest) {
   const isLoggedIn = !!token
 
   if (!isLoggedIn && !isPublic) {
-    const signInUrl = new URL("/auth/signin", origin)
+    const signInUrl = new URL("/auth/login", origin)
     signInUrl.searchParams.set("callbackUrl", req.nextUrl.href)
     return NextResponse.redirect(signInUrl)
   }
 
-  if (isLoggedIn && (pathname === "/auth/signin" || pathname === "/auth/signup")) {
-    return NextResponse.redirect(new URL("/", origin))
+  if (isLoggedIn && pathname.startsWith("/auth/")) {
+    return NextResponse.redirect(new URL("/dashboard", origin))
   }
 
   return NextResponse.next()
