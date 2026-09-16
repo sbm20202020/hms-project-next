@@ -37,34 +37,39 @@ const nextConfig = {
   
   async rewrites() {
     const djangoBaseUrl = normalizeDjangoApiUrl(process.env.DJANGO_API_URL);
-    const frontendOrigin = getOrigin(process.env.NEXTAUTH_URL || '');
-    const djangoOrigin = getOrigin(djangoBaseUrl);
-    const forceApiRewrite = process.env.NEXT_FORCE_API_REWRITE === 'true';
-
-    if (!forceApiRewrite && frontendOrigin && djangoOrigin && frontendOrigin === djangoOrigin) {
-      // Avoid self-referential API proxying when both URLs share the same origin.
-      // In that deployment mode, /api routing should be handled by the edge reverse proxy.
-      return [];
-    }
+    
+    // Always enable rewrites when DJANGO_API_URL points to internal Docker service
+    // This ensures /api/* routes are proxied to Django backend
+    console.log('[next.config] Django API URL:', djangoBaseUrl);
 
     return {
       // beforeFiles ensures these rewrites run before any Next.js API route
       beforeFiles: [
+        // Signup endpoint - redirect to Django
         {
           source: '/api/auth/signup',
           destination: `${djangoBaseUrl}/api/auth/signup/`,
         },
         {
-          source: '/api/:path((?!auth/).*)',
-          destination: `${djangoBaseUrl}/api/:path`,
+          source: '/api/auth/signup/',
+          destination: `${djangoBaseUrl}/api/auth/signup/`,
         },
+        // All other API routes (excluding NextAuth routes /api/auth/*)
+        // Handle paths with trailing slash
         {
-          source: '/api/:path((?!auth/).*[^/])',
+          source: '/api/:path((?!auth/).*)/',
+          destination: `${djangoBaseUrl}/api/:path/`,
+        },
+        // Handle paths without trailing slash - add trailing slash for Django
+        {
+          source: '/api/:path((?!auth/).+)',
           destination: `${djangoBaseUrl}/api/:path/`,
         },
       ],
     };
   },
+  // Disable automatic trailing slash redirect for API routes
+  skipTrailingSlashRedirect: true,
 };
 
 export default nextConfig;

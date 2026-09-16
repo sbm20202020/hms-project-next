@@ -4,6 +4,11 @@ import GoogleProvider from 'next-auth/providers/google'
 
 const DJANGO_API_URL = process.env.DJANGO_API_URL || 'http://localhost:8000'
 
+// Detect if we're running in a secure context (HTTPS)
+const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith('https://')
+const cookiePrefix = useSecureCookies ? '__Secure-' : ''
+const hostCookiePrefix = useSecureCookies ? '__Host-' : ''
+
 export const authOptions = {
   providers: [
     GoogleProvider({
@@ -57,6 +62,35 @@ export const authOptions = {
   pages: {
     signIn: '/auth/signin',
     signUp: '/auth/signup',
+  },
+  // Configure cookies based on environment (HTTP vs HTTPS)
+  cookies: {
+    sessionToken: {
+      name: `${cookiePrefix}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: useSecureCookies,
+      },
+    },
+    callbackUrl: {
+      name: `${cookiePrefix}next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: useSecureCookies,
+      },
+    },
+    csrfToken: {
+      name: `${hostCookiePrefix}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: useSecureCookies,
+      },
+    },
   },
   callbacks: {
     async jwt({ token, user }) {
