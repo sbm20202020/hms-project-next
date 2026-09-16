@@ -30,7 +30,10 @@ const quickActions = [
   { label: 'Consultations', href: '/consultations', icon: Stethoscope, color: 'bg-cyan-500/10 text-cyan-500' },
 ]
 
-const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+const PIE_COLORS = [
+  'oklch(0.65 0.15 80)', 'oklch(0.55 0.14 195)', 'oklch(0.45 0.13 150)',
+  'oklch(0.55 0.18 25)', 'oklch(0.55 0.16 300)', 'oklch(0.8 0.006 260)',
+]
 
 export default function DashboardPage() {
   const { data: session } = useSession()
@@ -59,9 +62,9 @@ export default function DashboardPage() {
 
   const financeChartData = finance
     ? [
-        { name: 'Revenus', value: finance.totalRevenus, fill: '#10b981' },
-        { name: 'Dépenses', value: finance.totalDepenses, fill: '#ef4444' },
-        { name: 'En attente', value: finance.enAttente, fill: '#f59e0b' },
+        { name: 'Revenus', value: finance.totalRevenus, fill: 'oklch(0.55 0.14 195)' },
+        { name: 'Dépenses', value: finance.totalDepenses, fill: 'oklch(0.55 0.16 300)' },
+        { name: 'En attente', value: finance.enAttente, fill: 'oklch(0.65 0.15 80)' },
       ]
     : []
 
